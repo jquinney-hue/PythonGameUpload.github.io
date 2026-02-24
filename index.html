@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Python Error Defense</title>
+<style>
+/* Base Reset & Variables */
+:root {
+    --bg-color: #1e1e1e;
+    --text-color: #d4d4d4;
+    --code-bg: #2d2d2d;
+    --accent-blue: #569cd6;
+    --accent-green: #6a9955;
+    --accent-red: #f44336;
+    --accent-orange: #ce9178;
+    --accent-purple: #c586c0;
+    --accent-yellow: #dcdcaa;
+    --accent-dark-purple: #6c5ce7;
+    --accent-teal: #4ec9b0; /* For Level 7 */
+    --accent-cyan: #4fc1ff; /* For Level 8 */
+    --accent-indigo: #5c2d91; /* For Level 9 */
+    --accent-pink: #d16969; /* For Level 10 */
+    --accent-brown: #ce723b; /* For Level 11 */
+    --accent-magenta: #da70d6; /* For Level 12 */
+    --accent-crimson: #dc143c; /* For Level 13 */
+    --accent-coral: #ff7f50; /* For Level 14 */
+    --accent-gold: #ffd700;
+    --ceiling-color: #ff0000;
+    --header-height: 70px;
+    --console-height: 80px;
+}
+
+* { box-sizing: border-box; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+input, textarea { user-select: text !important; -webkit-user-select: text !important; }
+
+body {
+    margin: 0; padding: 0; background-color: var(--bg-color); color: var(--text-color);
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    overflow: hidden; height: 100vh; width: 100vw; display: flex; flex-direction: column;
+}
+
+/* Screens */
+.screen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: none; flex-direction: column; justify-content: flex-start; align-items: center;
+    z-index: 100; background-color: rgba(30, 30, 30, 0.98); transition: opacity 0.3s; padding: 10px; text-align: center;
+}
+.screen.active { display: flex; }
+.screen-content { max-height: 90vh; overflow-y: auto; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;}
+
+/* HUD */
+#top-bar {
+    height: var(--header-height); width: 100%; background-color: #252526; border-bottom: 2px solid #333;
+    display: flex; justify-content: space-between; align-items: center; padding: 0 15px; z-index: 20; flex-shrink: 0;
+}
+.hud-group { display: flex; flex-direction: column; align-items: flex-start; font-size: 0.9rem; color: #ccc; }
+.hud-value { font-size: 1.2rem; font-weight: bold; color: white; }
+.btn-home {
+    background: #444; border: none; border-radius: 8px; width: 45px; height: 45px;
+    color: white; font-size: 1.5rem; display: flex; justify-content: center; align-items: center; cursor: pointer;
+}
+.btn-home:active { transform: scale(0.95); }
+
+/* CONSOLE WINDOW */
+#console-bar {
+    width: 100%;
+    height: var(--console-height);
+    background-color: #111;
+    border-bottom: 1px solid #444;
+    padding: 5px 10px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.9rem;
+    color: #fff;
+    overflow-y: auto;
+    z-index: 15;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+    transition: box-shadow 0.2s, border-color 0.2s;
+    border: 2px solid #333;
+}
+.console-line { margin: 1px 0; line-height: 1.2; white-space: pre-wrap; opacity: 0.9; }
+
+.console-flash { animation: flash-white 0.8s ease-in-out infinite; }
+@keyframes flash-white {
+    0% { border-color: #333; box-shadow: inset 0 0 0 0 transparent; }
+    50% { border-color: #fff; box-shadow: inset 0 0 20px 5px rgba(255, 255, 255, 0.2); }
+    100% { border-color: #333; box-shadow: inset 0 0 0 0 transparent; }
+}
+
+#console-input-wrapper {
+    display: none; flex-direction: row; align-items: center; width: 100%; color: #fff;
+}
+#console-prompt { color: #fff; white-space: pre; }
+#console-real-input {
+    background: transparent; border: none; outline: none; color: #fff; font-family: inherit; font-size: inherit; flex-grow: 1;
+}
+
+/* Game Area */
+#game-area { position: relative; flex-grow: 1; width: 100%; overflow: hidden; z-index: 2; background-color: var(--bg-color); }
+#ceiling {
+    position: absolute; top: 0; left: 0; width: 100%; height: 20px;
+    background: repeating-linear-gradient(45deg, #cc0000, #cc0000 10px, #ff0000 10px, #ff0000 20px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5); border-bottom: 2px solid #fff; z-index: 10; transition: top 0.5s ease-out;
+}
+#ceiling::before { content: ''; position: absolute; bottom: 100%; left: 0; width: 100%; height: 200vh; background-color: rgba(40, 0, 0, 0.9); pointer-events: none; }
+#danger-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, transparent 50%, rgba(255, 0, 0, 0.4));
+    opacity: 0; pointer-events: none; z-index: 1; transition: opacity 0.2s;
+}
+.flashing { animation: flash 1s infinite alternate; }
+@keyframes flash { 0% { opacity: 0; } 100% { opacity: 0.6; } }
+
+#logic-notice {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 600px;
+    background-color: rgba(78, 201, 176, 0.95); color: #1e1e1e; padding: 8px 15px; border-radius: 8px;
+    text-align: center; font-weight: bold; font-size: 0.95rem; display: none; z-index: 80;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5); pointer-events: none; border: 1px solid #fff;
+}
+#logic-notice.active { display: block; animation: slideDown 0.3s ease-out; }
+
+#well-done-msg {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
+    background-color: rgba(106, 153, 85, 0.95); color: white; padding: 20px 40px; border-radius: 15px;
+    font-size: 2rem; font-weight: bold; z-index: 90; opacity: 0; pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 0 20px rgba(106, 153, 85, 0.6); text-align: center; border: 2px solid #fff;
+}
+#well-done-msg.active { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+@keyframes slideDown { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+/* Code Blocks */
+.code-block {
+    position: absolute; background-color: var(--code-bg); border: 2px solid #444; border-radius: 8px;
+    padding: 10px 15px; font-size: 1rem; 
+    white-space: pre-wrap; max-width: 60vw; text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s, border-color 0.2s, background-color 0.2s;
+    transform: translateX(-50%); z-index: 3;
+}
+.code-block.selected {
+    border-color: #fff; background-color: #3c3c3c; transform: translateX(-50%) scale(1.1); z-index: 50;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+.float-text {
+    position: absolute; font-weight: bold; font-size: 1.2rem; pointer-events: none;
+    animation: floatUp 1s ease-out forwards; z-index: 20;
+}
+@keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-30px); opacity: 0; } }
+.code-string { color: var(--accent-orange); }
+.code-func { color: var(--accent-blue); }
+.code-comment { color: #6a9955; font-style: italic; }
+.code-error { text-decoration: underline wavy var(--accent-red); }
+.green-keyword { color: #6a9955; font-weight: bold; }
+
+/* Controls */
+#controls {
+    min-height: 140px; width: 100%; background-color: #252526; border-top: 2px solid #333;
+    display: flex; justify-content: center; align-items: center; padding: 10px; z-index: 20; flex-shrink: 0;
+}
+.control-panel { display: none; width: 100%; height: 100%; }
+.control-panel.active-flex { display: flex; }
+.control-panel.active-grid { display: grid; }
+
+#controls-text { flex-direction: column; align-items: center; gap: 5px; }
+#controls-mcq { grid-template-columns: 1fr 1fr; gap: 10px; }
+#controls-multi { flex-direction: column; align-items: center; gap: 5px; }
+
+.btn {
+    border: none; border-radius: 12px; padding: 15px; font-size: 1.1rem; font-weight: bold; color: white;
+    cursor: pointer; transition: transform 0.1s, opacity 0.2s; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+}
+.btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0.4); }
+.btn-game { width: 45%; height: 80%; }
+.input-group { display: flex; width: 100%; max-width: 600px; gap: 10px; }
+#code-input {
+    flex-grow: 1; background: #1e1e1e; border: 2px solid #444; color: var(--text-color);
+    padding: 12px; font-family: 'Consolas', monospace; font-size: 16px; border-radius: 8px; outline: none;
+}
+#code-input:focus { border-color: var(--accent-blue); }
+#code-input-area {
+    flex-grow: 1; background: #1e1e1e; border: 2px solid #444; color: var(--text-color);
+    padding: 10px; font-family: 'Consolas', monospace; font-size: 14px; border-radius: 8px;
+    outline: none; resize: none; width: 100%; height: 100%;
+}
+#code-input-area:focus { border-color: var(--accent-green); }
+.btn-fix { background-color: var(--accent-blue); width: 100px; }
+.btn-option {
+    background-color: #333; border: 1px solid #555; color: #d4d4d4; font-family: 'Consolas', monospace;
+    font-size: 0.8rem; padding: 5px 10px; box-shadow: 0 2px 0 rgba(0,0,0,0.3);
+    white-space: pre-wrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; justify-content: center;
+    line-height: 1.1; text-align: center;
+}
+.btn-option:active { background-color: #444; transform: translateY(2px); }
+
+/* Menu & Quadrants Grid */
+#menu-screen h1 { margin-top: 10px; margin-bottom: 5px; }
+
+#menu-container {
+    display: flex; flex-direction: row; width: 100%; max-width: 1200px; flex-grow: 1; gap: 15px; padding: 10px; overflow: hidden;
+}
+
+#test-panel {
+    width: 220px; min-width: 220px; background: #151515; border: 2px dashed #444; border-radius: 10px;
+    display: none; /* Changed: Hidden by default */
+    flex-direction: column; overflow: hidden;
+}
+
+#main-menu-grid {
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; flex-grow: 1; overflow: hidden;
+}
+
+.quadrant {
+    background: #252526; border: 2px solid #333; border-radius: 10px;
+    display: flex; flex-direction: column; position: relative; overflow: hidden;
+}
+.quadrant.locked {
+    opacity: 0.6; justify-content: center; align-items: center; color: #666; font-size: 1.2rem; font-weight: bold;
+}
+.quadrant-header {
+    background: #333; color: #fff; padding: 5px; font-size: 0.9rem; font-weight: bold; text-align: center; border-bottom: 2px solid #222;
+}
+.quadrant-content {
+    flex-grow: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+
+.level-row { display: flex; gap: 8px; justify-content: center; width: 100%; }
+.btn-level { background-color: var(--accent-green); width: 100%; flex: 2; height: 50px; font-size: 0.9rem; box-shadow: 0 0 5px rgba(106, 153, 85, 0.4); margin: 0; }
+.btn-level-2 { background-color: #ce9178; box-shadow: 0 0 5px rgba(206, 145, 120, 0.4); }
+.btn-level-3 { background-color: #569cd6; box-shadow: 0 0 5px rgba(86, 156, 214, 0.4); }
+.btn-level-4 { background-color: var(--accent-purple); box-shadow: 0 0 5px rgba(197, 134, 192, 0.4); }
+.btn-level-5 { background-color: var(--accent-yellow); color: #1e1e1e; box-shadow: 0 0 5px rgba(220, 220, 170, 0.4); }
+.btn-level-6 { background-color: var(--accent-dark-purple); color: #fff; box-shadow: 0 0 5px rgba(108, 92, 231, 0.4); }
+.btn-level-7 { background-color: var(--accent-teal); color: #1e1e1e; box-shadow: 0 0 5px rgba(78, 201, 176, 0.4); }
+.btn-level-8 { background-color: var(--accent-cyan); color: #1e1e1e; box-shadow: 0 0 5px rgba(79, 193, 255, 0.4); }
+.btn-level-9 { background-color: var(--accent-indigo); color: #fff; box-shadow: 0 0 5px rgba(92, 45, 145, 0.4); }
+.btn-level-10 { background-color: var(--accent-pink); color: #fff; box-shadow: 0 0 5px rgba(209, 105, 105, 0.4); }
+.btn-level-11 { background-color: var(--accent-brown); color: #fff; box-shadow: 0 0 5px rgba(206, 114, 59, 0.4); }
+.btn-level-12 { background-color: var(--accent-magenta); color: #fff; box-shadow: 0 0 5px rgba(218, 112, 214, 0.4); }
+.btn-level-13 { background-color: var(--accent-crimson); color: #fff; box-shadow: 0 0 5px rgba(220, 20, 60, 0.4); }
+.btn-level-14 { background-color: var(--accent-coral); color: #1e1e1e; box-shadow: 0 0 5px rgba(255, 127, 80, 0.4); }
+.btn-level-15 { background-color: #27ae60; color: #fff; box-shadow: 0 0 5px rgba(39, 174, 96, 0.4); }
+.btn-level-16 { background-color: #20b2aa; color: #1e1e1e; box-shadow: 0 0 5px rgba(32, 178, 170, 0.4); }
+
+.btn-hard { background-color: #8b2c2c; width: 100%; flex: 1; height: 50px; font-size: 0.8rem; border: 2px solid #f44336; color: white; margin: 0; }
+.btn-exam { background-color: var(--accent-gold); color: #1e1e1e; width: 90%; height: 50px; font-size: 1.1rem; box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); border: 2px solid #fff; margin-top: 10px; }
+
+.bottom-controls { width: 100%; padding: 15px; display: flex; justify-content: center; gap: 15px; background: #1e1e1e; border-top: 1px solid #333; }
+.btn-help { background-color: var(--accent-blue); width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold; border-radius: 50%; }
+.btn-report { background-color: #444; width: 200px; height: 50px; font-size: 1rem; border: 1px solid #666; }
+.btn-close { background-color: #444; margin-top: 20px; width: 150px; height: 50px; }
+.sub-text { font-size: 0.7rem; opacity: 0.9; font-weight: normal; display: block; }
+
+h1 { color: var(--accent-blue); margin-bottom: 5px; text-align: center; }
+p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin: 8px 0; }
+
+.info-box { background: #333; border-left: 5px solid; padding: 15px; border-radius: 6px; margin: 10px 0; width: 100%; max-width: 400px; text-align: left; }
+.info-syntax { border-color: #d16969; }
+.info-logic { border-color: #4ec9b0; }
+.info-comment { border-color: #569cd6; }
+.info-multi { border-color: var(--accent-yellow); }
+.info-step { border-color: var(--accent-dark-purple); }
+.info-var { border-color: var(--accent-teal); }
+
+.example-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.9rem; }
+.ex-label { color: #888; font-size: 0.8rem; margin-right: 10px; }
+.ex-code { background: #111; padding: 4px 8px; border-radius: 3px; font-family: monospace; color: #d4d4d4; flex-grow: 1; text-align: right; white-space: nowrap; }
+.err-mark { color: #f44336; font-weight: bold; }
+
+#report-modal, #load-level-modal {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9); z-index: 200; display: none;
+    justify-content: center; align-items: center; flex-direction: column;
+}
+#report-modal.active, #load-level-modal.active { display: flex; }
+#report-name-input, #level-url-input {
+    padding: 10px; font-size: 1.2rem; border-radius: 5px; border: 2px solid var(--accent-blue);
+    background: #222; color: white; margin-bottom: 20px; text-align: center; width: 80%; max-width: 400px;
+}
+#level-url-input { border-color: var(--accent-green); font-size: 1rem; }
+
+#exam-screen, #exam-results-screen { background-color: #1e1e1e; z-index: 150; }
+.exam-header { font-size: 1.5rem; color: var(--accent-gold); margin-bottom: 20px; border-bottom: 1px solid #444; width: 100%; text-align: center; padding-bottom: 10px; }
+.exam-question-box { background: #252526; padding: 20px; border-radius: 10px; width: 90%; max-width: 600px; margin-bottom: 20px; border: 1px solid #444; }
+.exam-code { font-family: 'Consolas', monospace; background: #111; padding: 15px; margin: 10px 0; border-radius: 5px; color: #d4d4d4; display: block; white-space: pre-wrap; }
+.exam-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.exam-textarea { width: 100%; height: 150px; background: #111; color: #d4d4d4; border: 1px solid #444; padding: 10px; font-family: 'Consolas', monospace; resize: none; border-radius: 5px; }
+.result-item { background: #252526; margin-bottom: 10px; padding: 10px; border-radius: 5px; text-align: left; width: 90%; max-width: 600px; border-left: 5px solid #444; }
+.result-item.correct { border-left-color: var(--accent-green); }
+.result-item.wrong { border-left-color: var(--accent-red); }
+
+@media (max-width: 768px) {
+    #menu-container { flex-direction: column; overflow-y: auto; }
+    #test-panel { width: 100%; min-height: 150px; flex-shrink: 0; margin-bottom: 10px; }
+    #main-menu-grid { overflow: visible; }
+}
+
+@media (max-height: 600px) {
+    #controls { min-height: 110px; }
+    .btn-game { font-size: 0.9rem; }
+    .btn-level { height: 50px; width: 110px; font-size: 0.8rem; }
+    .btn-hard { height: 50px; width: 50px; font-size: 0.7rem; }
+    .btn-help, .btn-report, .btn-exam { height: 40px; font-size: 0.9rem; }
+    h1 { font-size: 1.3rem; }
+    #logic-notice { top: 10px; font-size: 0.8rem; padding: 5px; }
+    #top-bar { height: 60px; padding: 0 10px; }
+    .hud-value { font-size: 1rem; }
+    .btn-option { font-size: 0.8rem; padding: 2px 5px; }
+}
+</style>
+</head>
+<body>
+
+<div id="top-bar">
+    <div class="hud-group"><div>SCORE</div><div id="score" class="hud-value">0</div></div>
+    <div class="hud-group"><div>LEVEL</div><div id="level" class="hud-value">1</div></div>
+    <div class="hud-group"><div>STAGE</div><div id="stage" class="hud-value">1</div></div>
+    <button class="btn-home" onclick="resetGame()">&#8962;</button>
+</div>
+
+<div id="console-bar">
+    <div id="console-history"></div>
+    <div id="console-input-wrapper">
+        <span id="console-prompt">&gt;</span>
+        <input type="text" id="console-real-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+</div>
+
+<div id="game-area">
+    <div id="ceiling"></div>
+    <div id="danger-overlay"></div>
+    <div id="logic-notice"></div>
+    <div id="well-done-msg">WELL DONE!</div>
+</div>
+
+<div id="menu-screen" class="screen active">
+    <h1>PYTHON DEFENSE</h1>
+    <div id="menu-container">
+        <!-- Left: Test Panel -->
+        <div id="test-panel" class="quadrant">
+            <div class="quadrant-header" style="background:#2d2d2d; border-bottom:2px dashed #444; color:#aaa;">DEV LAB</div>
+            <div class="quadrant-content">
+                 <button class="btn btn-level" style="background:#444; box-shadow:none; border:1px solid #666; font-size:0.8rem;" onclick="openLoadLevelModal('level')">Load Level JSON</button>
+                 <button class="btn btn-level" style="background:#444; box-shadow:none; border:1px solid #666; font-size:0.8rem;" onclick="openLoadLevelModal('exam')">Load Exam JSON</button>
+                 <div style="margin-top:10px; color:#666; font-size:0.8rem; text-align:center;">Placeholder levels for testing new mechanics</div>
+                 <button class="btn btn-level" style="background:#333; box-shadow:none; border:1px solid #555; font-size:0.8rem; opacity:0.7;">Test A</button>
+            </div>
+        </div>
+
+        <!-- Right: Main Grid -->
+        <div id="main-menu-grid">
+            <!-- Q1: Stage 1 -->
+            <div class="quadrant">
+                <div class="quadrant-header">Stage 1: Errors, print & comments</div>
+                <div class="quadrant-content">
+                    <div class="level-row"><button class="btn btn-level" onclick="startGame(1, false, this)">LEVEL 1<span class="sub-text">Identify</span></button><button class="btn btn-level btn-hard" onclick="startGame(1,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-2" onclick="startGame(2,false, this)">LEVEL 2<span class="sub-text">Fix</span></button><button class="btn btn-level btn-hard" onclick="startGame(2,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-3" onclick="startGame(3,false, this)">LEVEL 3<span class="sub-text">Comments</span></button><button class="btn btn-level btn-hard" onclick="startGame(3,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-4" onclick="startGame(4,false, this)">LEVEL 4<span class="sub-text">Type Code</span></button><button class="btn btn-level btn-hard" onclick="startGame(4,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-5" onclick="startGame(5,false, this)">LEVEL 5<span class="sub-text">Multi-line</span></button><button class="btn btn-level btn-hard" onclick="startGame(5,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-6" onclick="startGame(6,false, this)">LEVEL 6<span class="sub-text">Multi-Step</span></button><button class="btn btn-level btn-hard" onclick="startGame(6,true, this)">HARD</button></div>
+                    <button class="btn btn-exam" onclick="startExam(1, this)">TAKE EXAM 1</button>
+                </div>
+            </div>
+
+            <!-- Q2: Stage 2 -->
+            <div class="quadrant">
+                <div class="quadrant-header">Stage 2: Variables</div>
+                <div class="quadrant-content">
+                    <div class="level-row"><button class="btn btn-level btn-level-7" onclick="startGame(7,false, this)">LEVEL 7<span class="sub-text">Create Var</span></button><button class="btn btn-level btn-hard" onclick="startGame(7,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-8" onclick="startGame(8,false, this)">LEVEL 8<span class="sub-text">Type Var</span></button><button class="btn btn-level btn-hard" onclick="startGame(8,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-9" onclick="startGame(9,false, this)">LEVEL 9<span class="sub-text">Var + Com</span></button><button class="btn btn-level btn-hard" onclick="startGame(9,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-10" onclick="startGame(10,false, this)">LEVEL 10<span class="sub-text">Var + Print</span></button><button class="btn btn-level btn-hard" onclick="startGame(10,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-11" onclick="startGame(11,false, this)">LEVEL 11<span class="sub-text">Multi Param</span></button><button class="btn btn-level btn-hard" onclick="startGame(11,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-12" onclick="startGame(12,false, this)">LEVEL 12<span class="sub-text">Text Param</span></button><button class="btn btn-level btn-hard" onclick="startGame(12,true, this)">HARD</button></div>
+                    <button class="btn btn-exam" onclick="startExam(2, this)">TAKE EXAM 2</button>
+                </div>
+            </div>
+
+            <!-- Q3 -->
+            <div class="quadrant">
+                <div class="quadrant-header">Stage 3: Input</div>
+                <div class="quadrant-content">
+                     <div class="level-row"><button class="btn btn-level btn-level-13" onclick="startGame(13,false, this)">LEVEL 13<span class="sub-text">Input MC</span></button><button class="btn btn-level btn-hard" onclick="startGame(13,true, this)">HARD</button></div>
+                     <div class="level-row"><button class="btn btn-level btn-level-14" onclick="startGame(14,false, this)">LEVEL 14<span class="sub-text">Input Text</span></button><button class="btn btn-level btn-hard" onclick="startGame(14,true, this)">HARD</button></div>
+                     <div class="level-row"><button class="btn btn-level btn-level-15" onclick="startGame(15,false, this)">LEVEL 15<span class="sub-text">Input Comment</span></button><button class="btn btn-level btn-hard" onclick="startGame(15,true, this)">HARD</button></div>
+                     <div class="level-row"><button class="btn btn-level btn-level-16" onclick="startGame(16,false, this)">LEVEL 16<span class="sub-text">In & Out MC</span></button><button class="btn btn-level btn-hard" onclick="startGame(16,true, this)">HARD</button></div>
+                </div>
+            </div>
+
+            <!-- Q4 -->
+            <div class="quadrant locked">
+                <div class="quadrant-header">Stage 4: Iteration</div>
+                <div>Coming Soon</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-controls">
+        <button class="btn btn-report" onclick="openReportModal()">DOWNLOAD REPORT</button>
+        <button class="btn btn-help" onclick="showHelp()">?</button>
+    </div>
+</div>
+
+<div id="exam-screen" class="screen">
+    <div class="exam-header">FINAL EXAM</div>
+    <div style="color:#aaa; margin-bottom:10px;">Question <span id="exam-q-num">1</span> of 10</div>
+    <div id="exam-container" class="exam-question-box"></div>
+    <button class="btn btn-fix" id="exam-submit-btn" onclick="submitExamAnswer()">NEXT</button>
+</div>
+
+<div id="exam-results-screen" class="screen">
+    <div class="exam-header">EXAM RESULTS</div>
+    <h2 style="font-size:3rem; color:var(--accent-gold); margin:10px 0;"><span id="exam-final-score">0</span>/10</h2>
+    <div class="screen-content" id="exam-feedback-list" style="width:100%; flex:1;"></div>
+    <button class="btn btn-close" onclick="resetGame()">MENU</button>
+</div>
+
+<div id="report-modal">
+    <h2>STUDENT REPORT</h2>
+    <p>Enter your name to generate a certificate.</p>
+    <input type="text" id="report-name-input" placeholder="Your Name">
+    <div style="display:flex; gap:10px;">
+        <button class="btn btn-level" onclick="generateReport()">GENERATE</button>
+        <button class="btn btn-close" onclick="closeReportModal()">CANCEL</button>
+    </div>
+</div>
+
+<div id="load-level-modal">
+    <h2 style="color:var(--accent-green)">LOAD CUSTOM LEVEL</h2>
+    <p>Paste the direct URL to the level JSON file.</p>
+    <input type="text" id="level-url-input" placeholder="https://example.com/level.json">
+    <div style="display:flex; gap:10px;">
+        <button class="btn btn-level" onclick="submitCustomLevel()">LOAD</button>
+        <button class="btn btn-close" onclick="closeLoadLevelModal()">CANCEL</button>
+    </div>
+</div>
+
+<div id="help-screen" class="screen">
+    <div class="screen-content">
+        <h1>HOW TO PLAY</h1>
+        <div class="info-box info-syntax"><h3 style="color:#d16969">SYNTAX ERROR</h3><p style="color:#ccc">Code crashes (grammar).</p></div>
+        <div class="info-box info-logic"><h3 style="color:#4ec9b0">LOGIC ERROR</h3><p style="color:#ccc">Wrong output (typo).</p></div>
+        <div class="info-box info-comment"><h3 style="color:#569cd6">COMMENTS</h3><p style="color:#ccc">Match # comment to code.</p></div>
+        <div class="info-box info-multi"><h3 style="color:var(--accent-yellow)">MULTI-LINE</h3><p style="color:#ccc">Write comment AND code.</p></div>
+        <div class="info-box info-step"><h3 style="color:var(--accent-dark-purple)">MULTI-STEP</h3><p style="color:#ccc">Multiple instruction pairs.</p></div>
+        <div class="info-box info-var"><h3 style="color:var(--accent-teal)">VARIABLES</h3><p style="color:#ccc">Create variables (e.g. name="Bob")</p></div>
+        <button class="btn btn-close" onclick="closeHelp()">GOT IT</button>
+    </div>
+</div>
+
+<div id="game-over-screen" class="screen">
+    <h1 style="color:var(--accent-red)">GAME OVER</h1>
+    <p>The bugs reached the ceiling!</p>
+    <h2 style="margin:20px 0;">Final Score: <span id="final-score">0</span></h2>
+    <button class="btn btn-close" onclick="resetGame()">MAIN MENU</button>
+</div>
+
+<div id="controls">
+    <div id="controls-text" class="control-panel">
+        <div id="input-label" style="color:#aaa; font-size:0.9rem;">Tap a block, then type corrected code:</div>
+        <div class="input-group">
+            <input type="text" id="code-input" placeholder="Type code..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            <button class="btn btn-fix" onclick="submitTextAnswer()">FIX</button>
+        </div>
+    </div>
+    <div id="controls-mcq" class="control-panel">
+        <button class="btn btn-option" id="opt-0" onclick="submitMCQAnswer(0)"></button>
+        <button class="btn btn-option" id="opt-1" onclick="submitMCQAnswer(1)"></button>
+        <button class="btn btn-option" id="opt-2" onclick="submitMCQAnswer(2)"></button>
+        <button class="btn btn-option" id="opt-3" onclick="submitMCQAnswer(3)"></button>
+    </div>
+    <div id="controls-multi" class="control-panel">
+        <div id="input-label-multi" style="color:#aaa; font-size:0.8rem; margin-bottom:2px;">Type comment & code (Enter for new line):</div>
+        <div class="input-group" style="height:100%;">
+            <textarea id="code-input-area" placeholder="" spellcheck="false" autocomplete="off"></textarea>
+            <button class="btn btn-fix" onclick="submitMultiAnswer()">SUBMIT</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Stats (Persistent & Dated)
+    const STATS_KEY = 'pythonDefenseHistory';
+    let globalHistory = {};
+    let gameStats = getFreshStats(); 
+
+    function getFreshStats() {
+        let s = { 
+            totalTimePlayed: 0, 
+            levels: {}, 
+            exams: { 
+                1: { attempts: 0, bestScore: 0, lastScore: 0 }, 
+                2: { attempts: 0, bestScore: 0, lastScore: 0 } 
+            } 
+        };
+        for(let i=1; i<=16; i++) {
+            s.levels[i] = { highScore: 0, timePlayed: 0, correct: 0, incorrect: 0 };
+        }
+        return s;
+    }
+
+    function getTodayKey() {
+        return new Date().toLocaleDateString('en-CA'); // Returns YYYY-MM-DD
+    }
+
+    function loadStats() {
+        const stored = localStorage.getItem(STATS_KEY);
+        const today = getTodayKey();
+        
+        if (stored) {
+            try {
+                globalHistory = JSON.parse(stored);
+            } catch(e) {
+                console.error("Save file corrupted, resetting.");
+                globalHistory = {};
+            }
+        }
+        if (!globalHistory[today]) { globalHistory[today] = getFreshStats(); }
+        gameStats = globalHistory[today];
+
+        if(!gameStats.levels) gameStats.levels = {};
+        for(let i=1; i<=16; i++) {
+            if(!gameStats.levels[i]) gameStats.levels[i] = { highScore: 0, timePlayed: 0, correct: 0, incorrect: 0 };
+        }
+        if(!gameStats.exams) gameStats.exams = { 1: { attempts: 0, bestScore: 0, lastScore: 0 }, 2: { attempts: 0, bestScore: 0, lastScore: 0 } };
+        if(!gameStats.exams[1]) gameStats.exams[1] = { attempts: 0, bestScore: 0, lastScore: 0 };
+        if(!gameStats.exams[2]) gameStats.exams[2] = { attempts: 0, bestScore: 0, lastScore: 0 };
+    }
+
+    function saveStats() {
+        const today = getTodayKey();
+        globalHistory[today] = gameStats; 
+        localStorage.setItem(STATS_KEY, JSON.stringify(globalHistory));
+    }
+    
+    function startSession() { 
+        state.sessionStartTime = Date.now(); 
+        state.sessionCorrect = 0; 
+        state.sessionIncorrect = 0; 
+    }
+    
+    function endSession() {
+        if (!state.sessionStartTime || state.inExam) return; 
+        const durationSec = Math.floor((Date.now() - state.sessionStartTime) / 1000);
+        const lvl = state.level;
+        if(state.level === 'custom') return; 
+
+        if (!gameStats.levels[lvl]) gameStats.levels[lvl] = { highScore: 0, timePlayed: 0, correct: 0, incorrect: 0 };
+        gameStats.levels[lvl].timePlayed += durationSec;
+        gameStats.levels[lvl].correct += state.sessionCorrect;
+        gameStats.levels[lvl].incorrect += state.sessionIncorrect;
+        if (state.score > gameStats.levels[lvl].highScore) gameStats.levels[lvl].highScore = state.score;
+        gameStats.totalTimePlayed += durationSec;
+        saveStats();
+        state.sessionStartTime = 0;
+    }
+    loadStats();
+
+    const CONFIG = { spawnRate: 2500, baseSpeed: 0.5, ceilingDrop: 50, dangerThreshold: 150 };
+    let state = {
+        isPlaying: false, level: 1, stage: 1, isHard: false, score: 0, blocks: [], selectedBlockId: null,
+        lastSpawnTime: 0, ceilingY: 0, gameSpeed: 0, levelBaseSpeed: 0, wellDoneTimeout: null, animationFrameId: null,
+        currentOptions: [], sessionStartTime: 0, sessionCorrect: 0, sessionIncorrect: 0,
+        inExam: false, activeExamId: 1, examQuestions: [], currentExamIndex: 0, examAnswers: [] ,
+        waitingForInput: false, inputBlockId: null,
+        customLevelData: null, customExamData: null, loadingType: 'level'
+    };
+
+    const els = {
+        menuScreen: document.getElementById('menu-screen'), helpScreen: document.getElementById('help-screen'), gameOverScreen: document.getElementById('game-over-screen'),
+        examScreen: document.getElementById('exam-screen'), examResultsScreen: document.getElementById('exam-results-screen'),
+        gameArea: document.getElementById('game-area'), ceiling: document.getElementById('ceiling'), dangerOverlay: document.getElementById('danger-overlay'), logicNotice: document.getElementById('logic-notice'), wellDoneMsg: document.getElementById('well-done-msg'),
+        score: document.getElementById('score'), level: document.getElementById('level'), stage: document.getElementById('stage'), finalScore: document.getElementById('final-score'),
+        reportModal: document.getElementById('report-modal'), reportNameInput: document.getElementById('report-name-input'),
+        controlsText: document.getElementById('controls-text'), controlsMCQ: document.getElementById('controls-mcq'), controlsMulti: document.getElementById('controls-multi'),
+        inputLabel: document.getElementById('input-label'), inputLabelMulti: document.getElementById('input-label-multi'),
+        codeInput: document.getElementById('code-input'), codeArea: document.getElementById('code-input-area'), 
+        optBtns: [document.getElementById('opt-0'), document.getElementById('opt-1'), document.getElementById('opt-2'), document.getElementById('opt-3')],
+        examContainer: document.getElementById('exam-container'), examQNum: document.getElementById('exam-q-num'), examFeedbackList: document.getElementById('exam-feedback-list'), examFinalScore: document.getElementById('exam-final-score'),
+        consoleBar: document.getElementById('console-bar'), consoleHistory: document.getElementById('console-history'), consoleInputWrapper: document.getElementById('console-input-wrapper'), consoleRealInput: document.getElementById('console-real-input')
+    };
+
+    const LEVEL_URLS = {
+        1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel1.json",
+        2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel2.json",
+        3: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel3.json",
+        4: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel4.json",
+        5: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel5.json",
+        6: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel6.json",
+        7: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel7.json",
+        8: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel8.json",
+        9: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel9.json",
+        10: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel10.json",
+        11: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel11.json",
+        12: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel12.json",
+        13: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel13.json",
+        14: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel14.json",
+        15: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel15.json",
+        16: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel16.json"
+    };
+
+    const EXAM_URLS = {
+        1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/stage1exam.json",
+        2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/stage2exam.json"
+    };
+
+    // --- JSON LOADER ---
+    function openLoadLevelModal(type) {
+        state.loadingType = type;
+        const title = type === 'exam' ? "LOAD CUSTOM EXAM" : "LOAD CUSTOM LEVEL";
+        document.querySelector('#load-level-modal h2').innerText = title;
+        document.getElementById('load-level-modal').classList.add('active');
+        document.getElementById('level-url-input').focus();
+    }
+    function closeLoadLevelModal() { document.getElementById('load-level-modal').classList.remove('active'); }
+
+    async function submitCustomLevel() {
+        const url = document.getElementById('level-url-input').value.trim();
+        if (!url) return;
+        
+        const btn = document.querySelector('#load-level-modal .btn-level');
+        const originalText = btn.innerText;
+        btn.innerText = "LOADING..."; btn.disabled = true;
+        
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Fetch failed: " + res.status);
+            const data = await res.json();
+            
+            if (state.loadingType === 'exam') {
+                 if (!data.questions) throw new Error("Invalid Exam JSON: Missing 'questions'");
+            } else {
+                 if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
+                     throw new Error("Invalid Level JSON: Must contain 'questions' array.");
+                 }
+            }
+            
+            closeLoadLevelModal();
+
+            if (state.loadingType === 'exam') {
+                state.customExamData = data;
+                startExam('custom', null);
+            } else {
+                state.customLevelData = data;
+                startGame('custom', false, null);
+            }
+            
+        } catch (e) {
+            alert("Error loading JSON: " + e.message);
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    function logToConsole(msg) {
+        const line = document.createElement('div');
+        line.className = 'console-line';
+        line.innerText = msg;
+        line.classList.add('new');
+        els.consoleHistory.appendChild(line);
+        els.consoleBar.scrollTop = els.consoleBar.scrollHeight;
+    }
+
+    function generateBlockData(level) {
+        const id = Date.now() + Math.random().toString();
+        let data = { id: id, y: 0, x: 30 + Math.random() * 40, level: level }; 
+        const sourceData = state.customLevelData; 
+        if (sourceData && sourceData.questions) {
+             const q = sourceData.questions[Math.floor(Math.random() * sourceData.questions.length)];
+             data = { ...data, ...q, id: id, y: 0, x: data.x }; 
+             if (!data.html) data.html = `<span style="font-size:0.9rem">Question</span>`;
+             if (!data.correctCode) data.correctCode = "pass";
+        }
+        return data;
+    }
+
+    function updateCeilingVisual() { els.ceiling.style.top = `${state.ceilingY}px`; }
+    function showFloatingText(x, y, text, color) {
+        const el = document.createElement('div'); el.className = 'float-text'; el.innerText = text; el.style.color = color;
+        el.style.left = x + 'px'; el.style.top = y + 'px'; els.gameArea.appendChild(el); setTimeout(() => el.remove(), 1000);
+    }
+
+    function gameLoop(timestamp) {
+        if (!state.isPlaying) return;
+        const deltaTime = timestamp - state.lastSpawnTime;
+        if (deltaTime > CONFIG.spawnRate / Math.max(0.1, state.gameSpeed * 2)) { if(spawnBlock()) state.lastSpawnTime = timestamp; }
+        const areaHeight = els.gameArea.clientHeight; const ceilingLimit = state.ceilingY; let highestBlockTop = areaHeight;
+        state.blocks.forEach(block => {
+            block.y += state.gameSpeed; 
+            const topPos = areaHeight - block.y - block.el.clientHeight; block.el.style.top = `${topPos}px`;
+            if (topPos < highestBlockTop) highestBlockTop = topPos;
+            if (topPos <= ceilingLimit + els.ceiling.clientHeight) gameOver();
+        });
+        const distanceToCeiling = highestBlockTop - ceilingLimit;
+        if (distanceToCeiling < CONFIG.dangerThreshold) els.dangerOverlay.classList.add('flashing'); else els.dangerOverlay.classList.remove('flashing');
+        state.animationFrameId = requestAnimationFrame(gameLoop);
+    }
+    
+    function calculateStage(score) {
+        if (score < 20) return 1; if (score < 35) return 2; if (score < 55) return 3;
+        let currentStage = 3; let threshold = 55; let gap = 25;
+        while (score >= threshold) { currentStage++; threshold += gap; gap += 5; }
+        return currentStage;
+    }
+
+    function handleSuccess(block) {
+        if(!block) return;
+        const x = block.el.offsetLeft; const y = block.el.offsetTop;
+        block.el.remove(); state.blocks = state.blocks.filter(b => b.id !== block.id);
+        const points = state.isHard ? 2.5 : 1; state.score += points; els.score.innerText = state.score;
+        state.stage = calculateStage(state.score); els.stage.innerText = state.stage;
+        const steps = Math.floor(state.score / 5); let multiplier = 0.10 + (steps * 0.10); if (multiplier > 1.5) multiplier = 1.5;
+        state.gameSpeed = state.levelBaseSpeed * multiplier;
+        showFloatingText(x, y, "+" + points, "#6a9955");
+        if (state.blocks.length === 0) { showWellDone(); spawnBlock(); state.lastSpawnTime = performance.now(); }
+        if (state.blocks.length > 0) {
+            const nextBlock = state.blocks.reduce((prev, current) => (prev.y > current.y) ? prev : current);
+            selectBlock(null, nextBlock.id);
+        } else { 
+            state.selectedBlockId = null; 
+            updateButtons(); 
+            // Dynamic blur based on active panel
+            if(els.controlsText.classList.contains('active-flex')) els.codeInput.blur();
+            if(els.controlsMulti.classList.contains('active-flex')) els.codeArea.blur();
+        }
+    }
+
+    function handleFailure(block) {
+        state.ceilingY += CONFIG.ceilingDrop; updateCeilingVisual();
+        block.el.style.borderColor = "var(--accent-red)"; setTimeout(() => block.el.style.borderColor = block.el.classList.contains('selected') ? "#fff" : "#444", 500);
+        showFloatingText(block.el.offsetLeft, block.el.offsetTop, "WRONG!", "#f44336");
+        els.gameArea.style.transform = "translateX(5px)"; setTimeout(() => els.gameArea.style.transform = "translateX(-5px)", 50); setTimeout(() => els.gameArea.style.transform = "none", 100);
+    }
+
+    function processResult(isCorrect, output = null) {
+        if(!state.waitingForInput) hideLogicNotice();
+        if (isCorrect) { 
+            state.sessionCorrect++; 
+            if (output !== null) logToConsole(output);
+            handleSuccess(state.blocks.find(b=>b.id===state.selectedBlockId)); 
+        }
+        else { 
+            state.sessionIncorrect++; 
+            handleFailure(state.blocks.find(b=>b.id===state.selectedBlockId)); 
+            updateButtons(); 
+        }
+    }
+
+    async function startGame(levelNum, hardMode = false, btnElement) {
+        const btn = btnElement; 
+        let originalText = "";
+        if(btn) { originalText = btn.innerHTML; btn.innerText = "LOADING..."; }
+
+        state.isPlaying = true; state.level = levelNum; state.stage = 1; state.isHard = hardMode; state.score = 0; state.blocks = []; state.selectedBlockId = null; state.ceilingY = 0;
+        state.waitingForInput = false; state.inputBlockId = null; 
+        
+        try {
+            if (levelNum !== 'custom') {
+                 const url = LEVEL_URLS[levelNum];
+                 const res = await fetch(url);
+                 if (!res.ok) throw new Error("Failed to load level " + levelNum);
+                 state.customLevelData = await res.json();
+            }
+            startSession();
+            let base = CONFIG.baseSpeed;
+            if (hardMode) base = base * 2.5;
+            state.levelBaseSpeed = base; state.gameSpeed = state.levelBaseSpeed * 0.10;
+            
+            const allPanels = document.querySelectorAll('.control-panel');
+            allPanels.forEach(p => { p.classList.remove('active-flex', 'active-grid'); p.style.display = ''; });
+            els.consoleBar.innerHTML = '<div id="console-history"></div><div id="console-input-wrapper"><span id="console-prompt">&gt;</span><input type="text" id="console-real-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>';
+            els.consoleHistory = document.getElementById('console-history');
+            els.consoleInputWrapper = document.getElementById('console-input-wrapper');
+            els.consoleRealInput = document.getElementById('console-real-input');
+            els.consoleBar.classList.remove('console-flash');
+            
+            els.consoleRealInput.addEventListener("keypress", function(event) { if (event.key === "Enter") handleConsoleInput(); });
+            els.consoleBar.addEventListener("click", function() { if(state.waitingForInput) els.consoleRealInput.focus(); });
+
+            const type = state.customLevelData.type || 'text';
+            if (type === 'mcq') { els.controlsMCQ.classList.add('active-grid'); }
+            else if (type === 'multiline' || type === 'multistep' || type === 'var_print') {
+                els.controlsMulti.classList.add('active-flex');
+                els.inputLabelMulti.innerText = state.customLevelData.inputLabel || "Type code:";
+                els.codeArea.placeholder = ""; els.codeArea.value = "";
+            } else {
+                els.controlsText.classList.add('active-flex');
+                els.inputLabel.innerText = state.customLevelData.inputLabel || "Type the code:";
+                els.codeInput.value = "";
+            }
+
+            els.menuScreen.classList.remove('active'); els.helpScreen.classList.remove('active'); els.gameOverScreen.classList.remove('active'); els.examScreen.classList.remove('active');
+            hideLogicNotice(); document.querySelectorAll('.code-block').forEach(b => b.remove());
+            els.score.innerText = "0"; els.stage.innerText = "1"; els.level.innerText = (state.level === 'custom' ? 'Custom' : state.level) + (state.isHard ? " (H)" : "");
+            els.dangerOverlay.classList.remove('flashing'); updateCeilingVisual(); updateButtons();
+            state.lastSpawnTime = performance.now(); state.animationFrameId = requestAnimationFrame(gameLoop);
+            spawnBlock();
+        } catch (e) { console.error(e); alert("Error starting game: " + e.message); state.isPlaying = false; }
+        finally { if(btn) btn.innerHTML = originalText; }
+    }
+
+    function gameOver() {
+        if (!state.isPlaying) return;
+        endSession(); state.isPlaying = false; cancelAnimationFrame(state.animationFrameId);
+        els.finalScore.innerText = state.score; els.gameOverScreen.classList.add('active');
+        hideLogicNotice(); els.codeInput.blur(); els.codeArea.blur();
+        state.waitingForInput = false; els.consoleBar.classList.remove('console-flash');
+    }
+
+    function spawnBlock() {
+        if (state.waitingForInput) return false; 
+        const data = generateBlockData(state.level);
+        const el = document.createElement('div'); el.className = 'code-block'; el.innerHTML = data.html; 
+        el.style.left = `${data.x}%`;
+        el.addEventListener('mousedown', (e) => selectBlock(e, data.id));
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); selectBlock(e, data.id); });
+        els.gameArea.appendChild(el);
+        const height = el.clientHeight; el.style.top = (els.gameArea.clientHeight - height) + 'px'; 
+        const rect = el.getBoundingClientRect(); let overlap = false;
+        for (const block of state.blocks) {
+            const otherRect = block.el.getBoundingClientRect();
+            if (!(rect.right < otherRect.left || rect.left > otherRect.right || rect.bottom < otherRect.top || rect.top > otherRect.bottom)) { overlap = true; break; }
+        }
+        if (overlap) { el.remove(); return false; }
+        state.blocks.push({ id: data.id, el: el, data: data, y: 0 });
+        if (state.blocks.length === 1) selectBlock(null, data.id);
+        return true;
+    }
+
+    function selectBlock(e, id) {
+        if (!state.isPlaying) return;
+        if (state.waitingForInput) return; 
+
+        if (state.selectedBlockId === id) {
+            const type = state.customLevelData.type || 'text';
+            if (type !== 'mcq' && type !== 'multiline' && type !== 'multistep' && type !== 'var_print') els.codeInput.focus();
+            if (type === 'multiline' || type === 'multistep' || type === 'var_print') els.codeArea.focus();
+            return;
+        }
+        if (state.selectedBlockId) {
+            const prev = state.blocks.find(b => b.id === state.selectedBlockId);
+            if (prev) prev.el.classList.remove('selected');
+        }
+        state.selectedBlockId = id;
+        const curr = state.blocks.find(b => b.id === id);
+        if (curr) {
+            curr.el.classList.add('selected');
+            const type = state.customLevelData.type || 'text';
+            
+            if (type === 'mcq') {
+                updateLevel3Buttons(curr);
+            } else if (type === 'multiline' || type === 'multistep' || type === 'var_print') {
+                els.codeArea.value = ""; setTimeout(() => els.codeArea.focus(), 10);
+                handleCustomHints(curr);
+            } else {
+                els.codeInput.value = ""; setTimeout(() => els.codeInput.focus(), 10);
+                handleCustomHints(curr);
+            }
+        }
+        updateButtons();
+    }
+    
+    function handleCustomHints(block) {
+        if (block.data.notice) {
+            showLogicNotice(block.data.notice);
+        } else if (block.data.typoWord && block.data.originalWord) {
+            showLogicNotice(`"${block.data.typoWord}" is spelled wrong, the correct spelling is "${block.data.originalWord}"`);
+        } else {
+            hideLogicNotice();
+        }
+    }
+
+    function updateLevel3Buttons(block) {
+        let opts = block.data.optionsRaw ? [...block.data.optionsRaw] : ["?", "?", "?", "?"];
+        for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
+        state.currentOptions = opts;
+        for(let i=0; i<4; i++) if(els.optBtns[i]) els.optBtns[i].innerText = opts[i] || "";
+    }
+
+    function showLogicNotice(text) { els.logicNotice.innerHTML = text; els.logicNotice.classList.add('active'); }
+    function hideLogicNotice() { els.logicNotice.classList.remove('active'); }
+    function showWellDone() {
+        clearTimeout(state.wellDoneTimeout); els.wellDoneMsg.classList.add('active');
+        state.wellDoneTimeout = setTimeout(() => { els.wellDoneMsg.classList.remove('active'); }, 2000);
+    }
+
+    function updateButtons() {
+        const hasSelection = state.selectedBlockId !== null;
+        if(hasSelection) { /* Styles handle focus */ }
+        const type = state.customLevelData ? state.customLevelData.type : '';
+        if (type === 'mcq') {
+            const op = hasSelection ? "1" : "0.5";
+            els.optBtns.forEach(b => b.style.opacity = op);
+        }
+    }
+
+    // --- SUBMISSIONS ---
+    function submitTextAnswer() { 
+        if(!state.selectedBlockId) return; 
+        const block = state.blocks.find(b=>b.id===state.selectedBlockId);
+        const input = els.codeInput.value.trim();
+        
+        if (block.data.triggerConsole) {
+             if (block.data.useRegex) {
+                 const regex = new RegExp('^' + block.data.correctCode + '$');
+                 if(regex.test(input)) {
+                     // Extract prompt for console if needed
+                     let prompt = "";
+                     const match = input.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
+                     if(match) prompt = match[1];
+                     triggerConsoleInput(block, prompt);
+                     return;
+                 }
+             } else {
+                 if(input === block.data.correctCode) {
+                     let prompt = "";
+                     const match = input.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
+                     if(match) prompt = match[1];
+                     triggerConsoleInput(block, prompt);
+                     return;
+                 }
+             }
+        }
+        if (block.data.useRegex) {
+             const regex = new RegExp('^' + block.data.correctCode + '$');
+             processResult(regex.test(input));
+        } else {
+             processResult(input === block.data.correctCode);
+        }
+        els.codeInput.value = ""; 
+    }
+    
+    function submitMCQAnswer(i) { 
+        if(!state.selectedBlockId) return; 
+        const block = state.blocks.find(b=>b.id===state.selectedBlockId);
+        const ans = state.currentOptions[i];
+        const isCorrect = ans === block.data.correctCode;
+        
+        if (block.data.triggerConsole && isCorrect) { 
+             let prompt = "";
+             const match = ans.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
+             if(match) prompt = match[1];
+             triggerConsoleInput(block, prompt); 
+             return; 
+        }
+
+        let output = null;
+        if (isCorrect) {
+            const matchSimple = ans.match(/print\s*\(\s*["'](.+)["']\s*\)/);
+            if (matchSimple) output = matchSimple[1];
+        }
+        processResult(isCorrect, output); 
+    }
+    
+    function triggerConsoleInput(block, customPrompt = null) {
+        state.waitingForInput = true; state.inputBlockId = block.id;
+        els.consoleBar.classList.add('console-flash'); showLogicNotice(`Type answer in console and press Enter`);
+        let promptText = "> ";
+        if (customPrompt !== null) { promptText = customPrompt + " "; } 
+        else if (block && block.data.correctCode) {
+             const match = block.data.correctCode.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
+             if (match) promptText = match[1] + " "; 
+        }
+        const promptSpan = document.getElementById('console-prompt');
+        if(promptSpan) promptSpan.innerText = promptText;
+        els.consoleInputWrapper.style.display = 'flex'; els.consoleRealInput.value = "";
+        els.consoleBar.scrollTop = els.consoleBar.scrollHeight; els.consoleRealInput.focus();
+    }
+    
+    function handleConsoleInput() {
+        if (!state.waitingForInput) return;
+        const val = els.consoleRealInput.value;
+        const promptSpan = document.getElementById('console-prompt');
+        const promptText = promptSpan ? promptSpan.innerText : "> ";
+        logToConsole(promptText + val);
+        els.consoleInputWrapper.style.display = 'none'; els.consoleBar.classList.remove('console-flash');
+        hideLogicNotice(); 
+
+        let output = null;
+        let isCorrect = true;
+
+        if(state.inputBlockId) {
+             const block = state.blocks.find(b=>b.id===state.inputBlockId);
+             if(block && block.data.correctCode) {
+                 // Check if the code implies integer input: contains "int(" or regex "int\s*\("
+                 const expectsInt = /int\s*[\(\\]/.test(block.data.correctCode) || block.data.correctCode.includes("int(");
+                 
+                 if (expectsInt) {
+                     // Regex for integer: optional minus sign, one or more digits, no non-digit chars
+                     if (!/^-?\d+$/.test(val.trim())) {
+                         isCorrect = false;
+                     }
+                 }
+
+                 if (isCorrect) {
+                     // Check for print("Msg", var)
+                     const matchMulti = block.data.correctCode.match(/print\s*\(\s*["'](.+?)["']\s*,\s*(\w+)\s*\)/);
+                     if (matchMulti) {
+                         output = matchMulti[1] + " " + val;
+                     } else {
+                         // Fallback: print("Msg")
+                         const matchSimple = block.data.correctCode.match(/print\s*\(\s*["'](.+?)["']\s*\)/);
+                         if(matchSimple && !matchSimple[0].includes(',')) output = matchSimple[1];
+                     }
+                 }
+             }
+        }
+
+        state.waitingForInput = false; state.inputBlockId = null; 
+        processResult(isCorrect, output);
+    }
+    
+    function submitMultiAnswer() {
+        if (!state.selectedBlockId) return;
+        const block = state.blocks.find(b => b.id === state.selectedBlockId);
+        if (!block) return;
+        const lines = els.codeArea.value.trim().split('\n').map(l => l.trim()).filter(l => l !== "");
+        const type = state.customLevelData.type;
+
+        if (type === 'multistep') submitCustomMultiStep(block, lines);
+        else if (type === 'var_print') submitCustomVarPrint(block, els.codeArea.value.trim());
+        else if (block.data.triggerConsole) submitCustomMultiLineConsole(block, lines); // Level 15 handler
+        else submitCustomMultiLine(block, lines);
+        els.codeArea.value = "";
+    }
+
+    function submitCustomMultiLineConsole(block, lines) {
+        if (lines.length < 2) { processResult(false); return; }
+        
+        // Validate Comment
+        const commentLine = lines[0].toLowerCase();
+        let commentValid = true;
+        if (!commentLine.startsWith("#")) commentValid = false;
+        if (block.data.keywords && Array.isArray(block.data.keywords)) { 
+            block.data.keywords.forEach(k => { 
+                if (!commentLine.includes(k.toLowerCase())) commentValid = false; 
+            }); 
+        }
+
+        // Validate Code
+        const codeLine = lines[1];
+        let codeValid = false;
+        if (block.data.useRegex) {
+            const regex = new RegExp('^' + block.data.correctCode + '$');
+            codeValid = regex.test(codeLine);
+        } else {
+             codeValid = codeLine === block.data.correctCode;
+        }
+
+        if (commentValid && codeValid) {
+            // Trigger Console
+            let prompt = "";
+            const match = codeLine.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
+            if(match) prompt = match[1];
+            triggerConsoleInput(block, prompt);
+        } else {
+            processResult(false);
+        }
+    }
+
+    function submitCustomVarPrint(block, rawInput) {
+        if (block.data.useRegex) {
+            const regex = new RegExp(block.data.correctCode);
+            // Heuristic output check
+            if(regex.test(rawInput)) {
+                let output = null;
+                const lines = rawInput.split('\n');
+                const assignLine = lines.find(l => l.includes('='));
+                if(assignLine) {
+                     const parts = assignLine.split('=');
+                     let val = parts[1].trim();
+                     if(val.startsWith('"') || val.startsWith("'")) val = val.substring(1, val.length-1);
+                     output = val; 
+                }
+                processResult(true, output);
+            } else { processResult(false); }
+        } else { processResult(rawInput === block.data.correctCode); }
+    }
+
+    function submitCustomMultiStep(block, lines) {
+        const tasks = block.data.tasks;
+        if (!tasks || lines.length < tasks.length * 2) { processResult(false); return; }
+        let allCorrect = true; let outputs = [];
+        for (let i = 0; i < tasks.length; i++) {
+            const task = tasks[i];
+            const commentLine = lines[i*2].toLowerCase();
+            const codeLine = lines[i*2 + 1];
+            
+            if (!commentLine.startsWith("#")) { allCorrect = false; break; }
+            if (task.verb && !commentLine.includes(task.verb.toLowerCase())) { allCorrect = false; break; }
+            if (task.noun && !commentLine.includes(task.noun.toLowerCase())) { allCorrect = false; break; }
+            if (!codeLine.startsWith("print") || !codeLine.trim().endsWith(")")) { allCorrect = false; break; }
+            const content = codeLine.substring(codeLine.indexOf('(')+1, codeLine.lastIndexOf(')')).trim();
+            if (task.validation === 'string') { 
+                if (!/^["'].+["']$/.test(content)) { allCorrect = false; break; } 
+                else outputs.push(content.substring(1, content.length-1));
+            } else if (task.validation === 'number') {
+                if (/^["'].+["']$/.test(content)) {
+                    const unquoted = content.substring(1, content.length-1);
+                    if (isNaN(parseInt(unquoted))) { allCorrect = false; break; }
+                    else outputs.push(unquoted);
+                } else {
+                    const num = parseInt(content);
+                    if (isNaN(num)) { allCorrect = false; break; }
+                    if (task.min !== undefined && (num < task.min || num > task.max)) { allCorrect = false; break; }
+                    else outputs.push(num);
+                }
+            }
+        }
+        processResult(allCorrect, allCorrect ? outputs.join("\n") : null);
+    }
+
+    function submitCustomMultiLine(block, lines) {
+        if (lines.length < 2) { processResult(false); return; }
+        const commentLine = lines[0].toLowerCase(); const codeLine = lines[1];
+        let commentValid = true;
+        if (!commentLine.startsWith("#")) commentValid = false;
+        if (block.data.keywords && Array.isArray(block.data.keywords)) { block.data.keywords.forEach(k => { if (!commentLine.includes(k.toLowerCase())) commentValid = false; }); }
+        let codeValid = false;
+        if (block.data.useRegex) { const regex = new RegExp('^' + block.data.correctCode + '$'); codeValid = regex.test(codeLine); }
+        else { const userClean = codeLine.replace(/'/g, '"'); const correctClean = block.data.correctCode.replace(/'/g, '"'); codeValid = userClean === correctClean; }
+        processResult(commentValid && codeValid);
+    }
+
+    // --- EXAM LOGIC ---
+    async function startExam(id, btnElement) {
+        const btn = btnElement;
+        let originalText = "";
+        if(btn) { originalText = btn.innerHTML; btn.innerText = "LOADING..."; }
+        
+        state.inExam = true; state.activeExamId = id; 
+        try {
+            let data = null;
+            if (id === 'custom') { data = state.customExamData; } 
+            else {
+                 const url = EXAM_URLS[id];
+                 const res = await fetch(url);
+                 if (!res.ok) throw new Error("Failed to load exam");
+                 data = await res.json();
+            }
+            state.examQuestions = data.questions;
+            state.currentExamIndex = 0; state.examAnswers = [];
+            els.menuScreen.classList.remove('active'); els.examScreen.classList.add('active'); renderExamQuestion();
+        } catch (e) { console.error(e); alert("Error: " + e.message); state.inExam = false; } 
+        finally { if(btn && id !== 'custom') btn.innerHTML = originalText; }
+    }
+
+    function renderExamQuestion() {
+        const q = state.examQuestions[state.currentExamIndex]; els.examQNum.innerText = state.currentExamIndex + 1; const container = els.examContainer; container.innerHTML = '';
+        const p = document.createElement('p'); p.innerHTML = q.prompt; p.style.color = "#fff"; container.appendChild(p);
+        if (q.codeHtml) { const c = document.createElement('div'); c.className = 'exam-code'; c.innerHTML = q.codeHtml; container.appendChild(c); }
+        if (q.type === 'ident' || q.type === 'mcq') {
+            const optsDiv = document.createElement('div'); optsDiv.className = 'exam-options';
+            let opts = [...q.options || q.optionsRaw].sort(() => Math.random() - 0.5);
+            opts.forEach(opt => {
+                const btn = document.createElement('button'); btn.className = 'btn btn-option'; btn.innerText = opt;
+                btn.onclick = () => { Array.from(optsDiv.children).forEach(b => b.style.borderColor = '#555'); btn.style.borderColor = '#fff'; btn.setAttribute('data-selected', 'true'); };
+                optsDiv.appendChild(btn);
+            });
+            container.appendChild(optsDiv);
+        } else {
+            const area = document.createElement('textarea'); area.className = 'exam-textarea'; area.id = 'exam-input';
+            area.placeholder = ""; 
+            container.appendChild(area);
+        }
+    }
+
+    function submitExamAnswer() {
+        const q = state.examQuestions[state.currentExamIndex]; let userAnswer = null; let isCorrect = false;
+        if (q.type === 'ident' || q.type === 'mcq') {
+            const selectedBtn = els.examContainer.querySelector('button[data-selected="true"]'); if (!selectedBtn) return;
+            userAnswer = selectedBtn.innerText; isCorrect = userAnswer === q.correct;
+        } else {
+             const val = document.getElementById('exam-input').value.trim(); userAnswer = val;
+             if (q.type === 'text') {
+                 const lines = val.split('\n').filter(l=>l.trim()!=='');
+                 if (lines.length >= 2) {
+                     const cLine = lines[0].toLowerCase(); const codeLine = lines[1].replace(/'/g, '"');
+                     const k1 = q.keywords[0].toLowerCase(); const k2 = q.keywords[1].toLowerCase();
+                     isCorrect = cLine.startsWith('#') && cLine.includes(k1) && cLine.includes(k2) && codeLine === q.correctCode.replace(/'/g, '"');
+                 }
+             } else if (q.type === 'extended') {
+                 const lines = val.split('\n').map(l => l.trim()).filter(l => l !== '');
+                 if (lines.length >= q.tasks.length * 2) {
+                     let all = true;
+                     for (let i = 0; i < q.tasks.length; i++) {
+                         const task = q.tasks[i]; const cLower = (lines[i*2]||"").toLowerCase(); const code = lines[i*2+1]||"";
+                         if (!cLower.startsWith('#') || !cLower.includes(task.noun)) all = false;
+                         if (!code.startsWith('print(')) all = false;
+                         const content = code.substring(code.indexOf('(')+1, code.lastIndexOf(')')).trim();
+                         if (content.length === 0) { all = false; break; }
+                         if (!/^["'].+["']$/.test(content)) { if(task.noun === 'age' || task.noun === 'number') { if(isNaN(parseInt(content))) { all = false; break; } } else { all = false; break; } }
+                     }
+                     isCorrect = all;
+                 }
+             } else if (q.type === 'text_var') { isCorrect = checkVarAssign(val, q.targetVar, q.isString); } 
+             else if (q.type === 'text_var_com') {
+                 const lines = val.split('\n').filter(l=>l.trim()!=='');
+                 if(lines.length >= 2) {
+                     const cLine = lines[0].toLowerCase(); 
+                     let kw = true; q.keywords.forEach(k => { if(!cLine.includes(k)) kw=false; });
+                     if(kw) isCorrect = checkVarAssign(lines[1], q.targetVar, q.isString);
+                 }
+             } else if (q.type === 'text_var_print') {
+                 const lines = val.split('\n').filter(l=>!l.trim().startsWith("#") && l.trim()!=="");
+                 if(lines.length >= 2) {
+                     if(checkVarAssign(lines[0], q.targetVar, q.isString)) {
+                         const p = lines[1].trim(); if(p === `print(${q.targetVar})`) isCorrect = true;
+                     }
+                 }
+             } else if (q.type === 'text_var_print_multi') {
+                 const lines = val.split('\n').filter(l=>!l.trim().startsWith("#") && l.trim()!=="");
+                 if(lines.length >= 2) {
+                     if(checkVarAssign(lines[0], q.targetVar, q.isString)) {
+                         const p = lines[1].trim();
+                         if(p.startsWith('print(') && p.endsWith(')') && p.includes(',') && p.includes(q.targetVar)) isCorrect = true;
+                     }
+                 }
+             } else if (q.type === 'extended_var') {
+                 const rawLines = val.split('\n');
+                 let track = { name: { assigned: false, printed: false }, age: { assigned: false, printed: false }, hobby: { assigned: false, printed: false } };
+                 for(let rawLine of rawLines) {
+                     let line = rawLine.split('#')[0].trim(); if (line === '') continue;
+                     if (line.includes('=')) {
+                         const parts = line.split('=');
+                         if (parts.length === 2) {
+                             const v = parts[0].trim(); const value = parts[1].trim();
+                             if (track[v]) {
+                                 if (v === 'age') { if (!isNaN(Number(value)) || /^["']\d+["']$/.test(value)) track[v].assigned = true; } 
+                                 else { if (/^["'].+["']$/.test(value)) track[v].assigned = true; }
+                             }
+                         }
+                     }
+                     if (/^print\s*\(/.test(line) && line.endsWith(')')) {
+                         const content = line.substring(line.indexOf('(')+1, line.lastIndexOf(')'));
+                         const cleanContent = content.replace(/["'].*?["']/g, "");
+                         Object.keys(track).forEach(v => { const regex = new RegExp(`\\b${v}\\b`); if (track[v].assigned && regex.test(cleanContent)) { track[v].printed = true; } });
+                     }
+                 }
+                 isCorrect = track.name.printed && track.age.printed && track.hobby.printed;
+             }
+        }
+        state.examAnswers.push({ q: q, user: userAnswer, correct: isCorrect });
+        state.currentExamIndex++; if (state.currentExamIndex < state.examQuestions.length) { renderExamQuestion(); } else { finishExam(); }
+    }
+    
+    function checkVarAssign(line, name, isString) {
+        const parts = line.split('='); if (parts.length !== 2) return false;
+        if (parts[0].trim() !== name) return false;
+        const v = parts[1].trim();
+        if (isString) return /^["'].+["']$/.test(v);
+        return !isNaN(Number(v));
+    }
+    
+    function checkVarAssignInText(text, name, isString) {
+        const lines = text.split('\n');
+        for(let l of lines) { if(checkVarAssign(l, name, isString)) return true; }
+        return false;
+    }
+
+    function finishExam() {
+        const score = state.examAnswers.filter(a => a.correct).length;
+        if(!gameStats.exams[state.activeExamId]) gameStats.exams[state.activeExamId] = { attempts: 0, bestScore: 0, lastScore: 0 };
+        const st = gameStats.exams[state.activeExamId];
+        const prevScore = st.lastScore; st.attempts++; st.lastScore = score;
+        if (score > st.bestScore) st.bestScore = score;
+        st.improvement = score - prevScore; saveStats();
+        els.examScreen.classList.remove('active'); els.examResultsScreen.classList.add('active'); els.examFinalScore.innerText = score;
+        const list = els.examFeedbackList; list.innerHTML = '';
+        state.examAnswers.forEach((a, i) => {
+            const item = document.createElement('div'); item.className = `result-item ${a.correct ? 'correct' : 'wrong'}`;
+            item.innerHTML = `<div style="font-weight:bold; margin-bottom:5px;">Q${i+1}: ${a.q.prompt}</div><div style="font-size:0.9rem; color:#aaa;">Your Answer: ${a.user || "Nothing"}</div>${!a.correct ? `<div style="font-size:0.9rem; color:var(--accent-green);">Fix: ${a.q.explanation}</div>` : ''}`;
+            list.appendChild(item);
+        });
+    }
+
+    function openReportModal() { els.reportModal.classList.add('active'); els.reportNameInput.focus(); }
+    function closeReportModal() { els.reportModal.classList.remove('active'); }
+
+    function generateReport() {
+        const name = els.reportNameInput.value.trim() || "Student";
+        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+        canvas.width = 800; canvas.height = 1400; 
+        ctx.fillStyle = "#1e1e1e"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "#569cd6"; ctx.lineWidth = 10; ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#569cd6"; ctx.font = "bold 40px Consolas"; ctx.textAlign = "center"; ctx.fillText("PYTHON DEFENSE REPORT", 400, 80);
+        ctx.fillStyle = "#ffffff"; ctx.font = "30px Consolas"; ctx.fillText("Player: " + name, 400, 130);
+        const totalMins = Math.floor(gameStats.totalTimePlayed / 60);
+        ctx.fillStyle = "#ce9178"; ctx.font = "20px Consolas"; ctx.fillText(`Daily Training Time: ${totalMins} mins`, 400, 170);
+        ctx.fillStyle = "#d4d4d4"; ctx.font = "bold 20px Consolas"; ctx.textAlign = "left";
+        const startY = 240; const rowHeight = 50;
+        ctx.fillText("LEVEL", 50, startY); ctx.fillText("HIGH SCORE", 150, startY); ctx.fillText("CORRECT", 300, startY); ctx.fillText("WRONG", 420, startY); ctx.fillText("ACCURACY", 520, startY); ctx.fillText("TIME", 650, startY);
+        ctx.beginPath(); ctx.moveTo(40, startY + 15); ctx.lineTo(760, startY + 15); ctx.strokeStyle = "#444"; ctx.lineWidth = 2; ctx.stroke();
+        ctx.font = "20px Consolas";
+        let aggCorrect = 0; let aggWrong = 0;
+        for (let i = 1; i <= 16; i++) {
+            const s = gameStats.levels[i]; const y = startY + 50 + (i - 1) * rowHeight;
+            const totalQ = s.correct + s.incorrect; const acc = totalQ > 0 ? Math.round((s.correct / totalQ) * 100) + "%" : "-";
+            const mins = Math.floor(s.timePlayed / 60); aggCorrect += s.correct; aggWrong += s.incorrect;
+            ctx.fillStyle = "#6a9955"; ctx.fillText("Lvl " + i, 50, y);
+            ctx.fillStyle = "#d4d4d4"; ctx.fillText(Math.round(s.highScore), 150, y); ctx.fillText(s.correct, 300, y); ctx.fillText(s.incorrect, 420, y); ctx.fillText(acc, 520, y); ctx.fillText(`${mins}m`, 650, y);
+        }
+        const totalY = startY + 50 + (16 * rowHeight) + 10;
+        ctx.beginPath(); ctx.moveTo(40, totalY - 35); ctx.lineTo(760, totalY - 35); ctx.strokeStyle = "#444"; ctx.lineWidth = 2; ctx.stroke();
+        const aggTotal = aggCorrect + aggWrong; const aggAcc = aggTotal > 0 ? Math.round((aggCorrect / aggTotal) * 100) + "%" : "-";
+        ctx.fillStyle = "#ce9178"; ctx.font = "bold 20px Consolas"; ctx.fillText("TOTAL", 50, totalY);
+        ctx.fillStyle = "#d4d4d4"; ctx.fillText("-", 150, totalY); ctx.fillText(aggCorrect, 300, totalY); ctx.fillText(aggWrong, 420, totalY); ctx.fillText(aggAcc, 520, totalY);
+
+        let examY = 1100;
+        const drawExamBlock = (id, title, yPos) => {
+             if(!gameStats.exams[id]) return;
+             const ex = gameStats.exams[id];
+             ctx.fillStyle = "#ffd700"; ctx.font = "bold 25px Consolas"; ctx.textAlign = "center";
+             ctx.fillText(title, 400, yPos);
+             ctx.font = "20px Consolas"; ctx.fillStyle = "#fff";
+             const pct = (ex.lastScore * 10) + "%";
+             const imp = ex.improvement || 0;
+             ctx.fillText(`Latest: ${ex.lastScore}/10 (${pct})`, 400, yPos + 30);
+             ctx.fillStyle = "#aaa";
+             ctx.fillText(`Best: ${ex.bestScore}/10`, 400, yPos + 55);
+             if (imp > 0) { ctx.fillStyle = "#6a9955"; ctx.fillText(`(+${imp} Improvement)`, 400, yPos + 80); }
+             else if (imp < 0) { ctx.fillStyle = "#f44336"; ctx.fillText(`(${imp} Drop)`, 400, yPos + 80); }
+        };
+        drawExamBlock(1, "EXAM 1: BASICS", examY);
+        drawExamBlock(2, "EXAM 2: VARIABLES", examY + 120);
+
+        const link = document.createElement('a'); link.download = `PythonDefense_${name.replace(/ /g,'_')}_Report.png`; link.href = canvas.toDataURL(); link.click(); closeReportModal();
+    }
+
+    function showHelp() { els.menuScreen.classList.remove('active'); els.helpScreen.classList.add('active'); }
+    function closeHelp() { els.helpScreen.classList.remove('active'); els.menuScreen.classList.add('active'); }
+    
+    function resetGame() {
+        state.isPlaying = false; state.inExam = false;
+        cancelAnimationFrame(state.animationFrameId);
+        els.gameOverScreen.classList.remove('active');
+        els.examScreen.classList.remove('active');
+        els.examResultsScreen.classList.remove('active');
+        els.menuScreen.classList.add('active');
+        if(state.sessionStartTime) endSession();
+        hideLogicNotice(); els.codeInput.blur(); els.codeArea.blur(); els.consoleBar.innerHTML = "";
+    }
+
+    // Dev Mode Trigger
+    let devKeyBuffer = [];
+    document.addEventListener('keydown', (e) => {
+        if (!els.menuScreen.classList.contains('active')) return;
+        
+        // Must hold shift
+        if (!e.shiftKey) { 
+            devKeyBuffer = []; 
+            return; 
+        }
+
+        // Ignore the Shift key itself
+        if (e.key === 'Shift') return;
+
+        devKeyBuffer.push(e.key.toLowerCase());
+        if (devKeyBuffer.length > 3) devKeyBuffer.shift();
+
+        if (devKeyBuffer.join('') === 'dev') {
+            const panel = document.getElementById('test-panel');
+            panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+            devKeyBuffer = []; // Reset
+        }
+    });
+</script>
+</body>
+</html>
