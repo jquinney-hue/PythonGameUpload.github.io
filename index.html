@@ -409,9 +409,12 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             </div>
 
             <!-- Q4 -->
-            <div class="quadrant locked">
-                <div class="quadrant-header">Stage 4: Iteration</div>
-                <div>Coming Soon</div>
+            <div class="quadrant">
+                <div class="quadrant-header">Stage 4: Selection</div>
+                <div class="quadrant-content">
+                     <div class="level-row"><button class="btn btn-level btn-level-19" onclick="startGame(19,false, this)">LEVEL 19<span class="sub-text">Operators (Easy)</span></button><button class="btn btn-level btn-hard" onclick="startGame(19,true, this)">HARD</button></div>
+                     <div class="level-row"><button class="btn btn-level btn-level-20" onclick="startGame(20,false, this)">LEVEL 20<span class="sub-text">Operators</span></button><button class="btn btn-level btn-hard" onclick="startGame(20,true, this)">HARD</button></div>
+                </div>
             </div>
         </div>
     </div>
@@ -505,6 +508,35 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     let globalHistory = {};
     let gameStats = getFreshStats(); 
 
+    var NUM_LEVELS = 20;
+    const LEVEL_URLS = {
+        1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel1.json",
+        2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel2.json",
+        3: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel3.json",
+        4: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel4.json",
+        5: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel5.json",
+        6: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel6.json",
+        7: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel7.json",
+        8: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel8.json",
+        9: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel9.json",
+        10: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel10.json",
+        11: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel11.json",
+        12: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel12.json",
+        13: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel13.json",
+        14: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel14.json",
+        15: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel15.json",
+        16: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel16.json",
+        17: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel17.json",
+        18: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel18.json",
+        19: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel19.json",
+        20: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel20.json"
+    };
+
+    const EXAM_URLS = {
+        1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/stage1exam.json",
+        2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/stage2exam.json"
+    };
+
     function getFreshStats() {
         let s = { 
             totalTimePlayed: 0, 
@@ -514,7 +546,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                 2: { attempts: 0, bestScore: 0, lastScore: 0 } 
             } 
         };
-        for(let i=1; i<=18; i++) {
+        for(let i=1; i<=NUM_LEVELS; i++) {
             s.levels[i] = { highScore: 0, timePlayed: 0, correct: 0, incorrect: 0 };
         }
         return s;
@@ -540,7 +572,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         gameStats = globalHistory[today];
 
         if(!gameStats.levels) gameStats.levels = {};
-        for(let i=1; i<=18; i++) {
+        for(let i=1; i<=NUM_LEVELS; i++) {
             if(!gameStats.levels[i]) gameStats.levels[i] = { highScore: 0, timePlayed: 0, correct: 0, incorrect: 0 };
         }
         if(!gameStats.exams) gameStats.exams = { 1: { attempts: 0, bestScore: 0, lastScore: 0 }, 2: { attempts: 0, bestScore: 0, lastScore: 0 } };
@@ -599,32 +631,6 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         optBtns: [document.getElementById('opt-0'), document.getElementById('opt-1'), document.getElementById('opt-2'), document.getElementById('opt-3')],
         examContainer: document.getElementById('exam-container'), examQNum: document.getElementById('exam-q-num'), examFeedbackList: document.getElementById('exam-feedback-list'), examFinalScore: document.getElementById('exam-final-score'),
         consoleBar: document.getElementById('console-bar'), consoleHistory: document.getElementById('console-history'), consoleInputWrapper: document.getElementById('console-input-wrapper'), consoleRealInput: document.getElementById('console-real-input')
-    };
-
-    const LEVEL_URLS = {
-        1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel1.json",
-        2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel2.json",
-        3: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel3.json",
-        4: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel4.json",
-        5: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel5.json",
-        6: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel6.json",
-        7: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel7.json",
-        8: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel8.json",
-        9: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel9.json",
-        10: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel10.json",
-        11: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel11.json",
-        12: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel12.json",
-        13: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel13.json",
-        14: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel14.json",
-        15: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel15.json",
-        16: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel16.json",
-        17: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel17.json",
-        18: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel18.json"
-    };
-
-    const EXAM_URLS = {
-        1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/stage1exam.json",
-        2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/stage2exam.json"
     };
 
     // --- JSON LOADER ---
@@ -1317,14 +1323,14 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         ctx.beginPath(); ctx.moveTo(40, startY + 15); ctx.lineTo(760, startY + 15); ctx.strokeStyle = "#444"; ctx.lineWidth = 2; ctx.stroke();
         ctx.font = "20px Consolas";
         let aggCorrect = 0; let aggWrong = 0;
-        for (let i = 1; i <= 18; i++) {
+        for (let i = 1; i <= NUM_LEVELS; i++) {
             const s = gameStats.levels[i]; const y = startY + 50 + (i - 1) * rowHeight;
             const totalQ = s.correct + s.incorrect; const acc = totalQ > 0 ? Math.round((s.correct / totalQ) * 100) + "%" : "-";
             const mins = Math.floor(s.timePlayed / 60); aggCorrect += s.correct; aggWrong += s.incorrect;
             ctx.fillStyle = "#6a9955"; ctx.fillText("Lvl " + i, 50, y);
             ctx.fillStyle = "#d4d4d4"; ctx.fillText(Math.round(s.highScore), 150, y); ctx.fillText(s.correct, 300, y); ctx.fillText(s.incorrect, 420, y); ctx.fillText(acc, 520, y); ctx.fillText(`${mins}m`, 650, y);
         }
-        const totalY = startY + 50 + (18 * rowHeight) + 10;
+        const totalY = startY + 50 + (NUM_LEVELS * rowHeight) + 10;
         ctx.beginPath(); ctx.moveTo(40, totalY - 35); ctx.lineTo(760, totalY - 35); ctx.strokeStyle = "#444"; ctx.lineWidth = 2; ctx.stroke();
         const aggTotal = aggCorrect + aggWrong; const aggAcc = aggTotal > 0 ? Math.round((aggCorrect / aggTotal) * 100) + "%" : "-";
         ctx.fillStyle = "#ce9178"; ctx.font = "bold 20px Consolas"; ctx.fillText("TOTAL", 50, totalY);
