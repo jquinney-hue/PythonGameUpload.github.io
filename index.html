@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Python Error Defense</title>
@@ -371,12 +372,12 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             <div class="quadrant">
                 <div class="quadrant-header">Stage 1: Errors, print & comments</div>
                 <div class="quadrant-content">
-                    <div class="level-row"><button class="btn btn-level" onclick="startGame(1, false, this)">LEVEL 1<span class="sub-text">Identify</span></button><button class="btn btn-level btn-hard" onclick="startGame(1,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-2" onclick="startGame(2,false, this)">LEVEL 2<span class="sub-text">Fix</span></button><button class="btn btn-level btn-hard" onclick="startGame(2,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-3" onclick="startGame(3,false, this)">LEVEL 3<span class="sub-text">Comments</span></button><button class="btn btn-level btn-hard" onclick="startGame(3,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-4" onclick="startGame(4,false, this)">LEVEL 4<span class="sub-text">Type Code</span></button><button class="btn btn-level btn-hard" onclick="startGame(4,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-5" onclick="startGame(5,false, this)">LEVEL 5<span class="sub-text">Multi-line</span></button><button class="btn btn-level btn-hard" onclick="startGame(5,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-6" onclick="startGame(6,false, this)">LEVEL 6<span class="sub-text">Multi-Step</span></button><button class="btn btn-level btn-hard" onclick="startGame(6,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-1" onclick="startGame(1,false, this)">LEVEL 1<span class="sub-text">Spot the Error</span></button><button class="btn btn-level btn-hard" onclick="startGame(1,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-2" onclick="startGame(2,false, this)">LEVEL 2<span class="sub-text">Fix the Error</span></button><button class="btn btn-level btn-hard" onclick="startGame(2,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-3" onclick="startGame(3,false, this)">LEVEL 3<span class="sub-text">Match Print</span></button><button class="btn btn-level btn-hard" onclick="startGame(3,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-4" onclick="startGame(4,false, this)">LEVEL 4<span class="sub-text">Write Print</span></button><button class="btn btn-level btn-hard" onclick="startGame(4,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-5" onclick="startGame(5,false, this)">LEVEL 5<span class="sub-text">Comment & Print</span></button><button class="btn btn-level btn-hard" onclick="startGame(5,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-6" onclick="startGame(6,false, this)">LEVEL 6<span class="sub-text">2 Comments & Prints</span></button><button class="btn btn-level btn-hard" onclick="startGame(6,true, this)">HARD</button></div>
                     <button class="btn btn-exam" onclick="startExam(1, this)">TAKE EXAM 1</button>
                 </div>
             </div>
@@ -385,12 +386,12 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             <div class="quadrant">
                 <div class="quadrant-header">Stage 2: Variables</div>
                 <div class="quadrant-content">
-                    <div class="level-row"><button class="btn btn-level btn-level-7" onclick="startGame(7,false, this)">LEVEL 7<span class="sub-text">Create Var</span></button><button class="btn btn-level btn-hard" onclick="startGame(7,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-8" onclick="startGame(8,false, this)">LEVEL 8<span class="sub-text">Type Var</span></button><button class="btn btn-level btn-hard" onclick="startGame(8,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-9" onclick="startGame(9,false, this)">LEVEL 9<span class="sub-text">Var + Com</span></button><button class="btn btn-level btn-hard" onclick="startGame(9,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-10" onclick="startGame(10,false, this)">LEVEL 10<span class="sub-text">Var + Print</span></button><button class="btn btn-level btn-hard" onclick="startGame(10,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-11" onclick="startGame(11,false, this)">LEVEL 11<span class="sub-text">Multi Param</span></button><button class="btn btn-level btn-hard" onclick="startGame(11,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-12" onclick="startGame(12,false, this)">LEVEL 12<span class="sub-text">Text Param</span></button><button class="btn btn-level btn-hard" onclick="startGame(12,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-7" onclick="startGame(7,false, this)">LEVEL 7<span class="sub-text">Match Variable</span></button><button class="btn btn-level btn-hard" onclick="startGame(7,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-8" onclick="startGame(8,false, this)">LEVEL 8<span class="sub-text">Write Variable</span></button><button class="btn btn-level btn-hard" onclick="startGame(8,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-9" onclick="startGame(9,false, this)">LEVEL 9<span class="sub-text">Comment & Assign</span></button><button class="btn btn-level btn-hard" onclick="startGame(9,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-10" onclick="startGame(10,false, this)">LEVEL 10<span class="sub-text">Assign & Print</span></button><button class="btn btn-level btn-hard" onclick="startGame(10,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-11" onclick="startGame(11,false, this)">LEVEL 11<span class="sub-text">Match Output</span></button><button class="btn btn-level btn-hard" onclick="startGame(11,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-12" onclick="startGame(12,false, this)">LEVEL 12<span class="sub-text">Write & Print Var</span></button><button class="btn btn-level btn-hard" onclick="startGame(12,true, this)">HARD</button></div>
                     <button class="btn btn-exam" onclick="startExam(2, this)">TAKE EXAM 2</button>
                 </div>
             </div>
@@ -399,12 +400,12 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             <div class="quadrant">
                 <div class="quadrant-header">Stage 3: Input</div>
                 <div class="quadrant-content">
-                     <div class="level-row"><button class="btn btn-level btn-level-13" onclick="startGame(13,false, this)">LEVEL 13<span class="sub-text">Input MC</span></button><button class="btn btn-level btn-hard" onclick="startGame(13,true, this)">HARD</button></div>
-                     <div class="level-row"><button class="btn btn-level btn-level-14" onclick="startGame(14,false, this)">LEVEL 14<span class="sub-text">Input Text</span></button><button class="btn btn-level btn-hard" onclick="startGame(14,true, this)">HARD</button></div>
-                     <div class="level-row"><button class="btn btn-level btn-level-15" onclick="startGame(15,false, this)">LEVEL 15<span class="sub-text">Input Comment</span></button><button class="btn btn-level btn-hard" onclick="startGame(15,true, this)">HARD</button></div>
-                     <div class="level-row"><button class="btn btn-level btn-level-16" onclick="startGame(16,false, this)">LEVEL 16<span class="sub-text">In & Out MC</span></button><button class="btn btn-level btn-hard" onclick="startGame(16,true, this)">HARD</button></div>
-                     <div class="level-row"><button class="btn btn-level btn-level-17" onclick="startGame(17,false, this)">LEVEL 17<span class="sub-text">Data Types (Easy)</span></button><button class="btn btn-level btn-hard" onclick="startGame(17,true, this)">HARD</button></div>
-                     <div class="level-row"><button class="btn btn-level btn-level-18" onclick="startGame(18,false, this)">LEVEL 18<span class="sub-text">Data Types</span></button><button class="btn btn-level btn-hard" onclick="startGame(18,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-13" onclick="startGame(13,false, this)">LEVEL 13<span class="sub-text">Match Input</span></button><button class="btn btn-level btn-hard" onclick="startGame(13,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-14" onclick="startGame(14,false, this)">LEVEL 14<span class="sub-text">Write Input</span></button><button class="btn btn-level btn-hard" onclick="startGame(14,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-15" onclick="startGame(15,false, this)">LEVEL 15<span class="sub-text">Comment & Input</span></button><button class="btn btn-level btn-hard" onclick="startGame(15,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-16" onclick="startGame(16,false, this)">LEVEL 16<span class="sub-text">⚠ Broken</span></button><button class="btn btn-level btn-hard" onclick="startGame(16,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-17" onclick="startGame(17,false, this)">LEVEL 17<span class="sub-text">Spot Data Type</span></button><button class="btn btn-level btn-hard" onclick="startGame(17,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-18" onclick="startGame(18,false, this)">LEVEL 18<span class="sub-text">Cast Data Type</span></button><button class="btn btn-level btn-hard" onclick="startGame(18,true, this)">HARD</button></div>
                 </div>
             </div>
 
@@ -412,8 +413,10 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             <div class="quadrant">
                 <div class="quadrant-header">Stage 4: Selection</div>
                 <div class="quadrant-content">
-                     <div class="level-row"><button class="btn btn-level btn-level-19" onclick="startGame(19,false, this)">LEVEL 19<span class="sub-text">Operators (Easy)</span></button><button class="btn btn-level btn-hard" onclick="startGame(19,true, this)">HARD</button></div>
-                     <div class="level-row"><button class="btn btn-level btn-level-20" onclick="startGame(20,false, this)">LEVEL 20<span class="sub-text">Operators</span></button><button class="btn btn-level btn-hard" onclick="startGame(20,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-19" onclick="startGame(19,false, this)">LEVEL 19<span class="sub-text">Match Operator</span></button><button class="btn btn-level btn-hard" onclick="startGame(19,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-20" onclick="startGame(20,false, this)">LEVEL 20<span class="sub-text">Write Operator</span></button><button class="btn btn-level btn-hard" onclick="startGame(20,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-21" onclick="startGame(21,false, this)">LEVEL 21<span class="sub-text">Match If Statement</span></button><button class="btn btn-level btn-hard" onclick="startGame(21,true, this)">HARD</button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-22" onclick="startGame(22,false, this)">LEVEL 22<span class="sub-text">Write If Statement</span></button><button class="btn btn-level btn-hard" onclick="startGame(22,true, this)">HARD</button></div>
                 </div>
             </div>
         </div>
@@ -508,7 +511,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     let globalHistory = {};
     let gameStats = getFreshStats(); 
 
-    var NUM_LEVELS = 20;
+    var NUM_LEVELS = 22;
     const LEVEL_URLS = {
         1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel1.json",
         2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel2.json",
@@ -529,7 +532,9 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         17: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel17.json",
         18: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel18.json",
         19: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel19.json",
-        20: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel20.json"
+        20: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel20.json",
+        21: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel21.json",
+        22: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel22.json"
     };
 
     const EXAM_URLS = {
@@ -1307,54 +1312,271 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     function openReportModal() { els.reportModal.classList.add('active'); els.reportNameInput.focus(); }
     function closeReportModal() { els.reportModal.classList.remove('active'); }
 
-    function generateReport() {
+    async function generateReport() {
         const name = els.reportNameInput.value.trim() || "Student";
-        const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-        canvas.width = 800; canvas.height = 1400; 
-        ctx.fillStyle = "#1e1e1e"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = "#569cd6"; ctx.lineWidth = 10; ctx.strokeRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#569cd6"; ctx.font = "bold 40px Consolas"; ctx.textAlign = "center"; ctx.fillText("PYTHON DEFENSE REPORT", 400, 80);
-        ctx.fillStyle = "#ffffff"; ctx.font = "30px Consolas"; ctx.fillText("Player: " + name, 400, 130);
-        const totalMins = Math.floor(gameStats.totalTimePlayed / 60);
-        ctx.fillStyle = "#ce9178"; ctx.font = "20px Consolas"; ctx.fillText(`Daily Training Time: ${totalMins} mins`, 400, 170);
-        ctx.fillStyle = "#d4d4d4"; ctx.font = "bold 20px Consolas"; ctx.textAlign = "left";
-        const startY = 240; const rowHeight = 50;
-        ctx.fillText("LEVEL", 50, startY); ctx.fillText("HIGH SCORE", 150, startY); ctx.fillText("CORRECT", 300, startY); ctx.fillText("WRONG", 420, startY); ctx.fillText("ACCURACY", 520, startY); ctx.fillText("TIME", 650, startY);
-        ctx.beginPath(); ctx.moveTo(40, startY + 15); ctx.lineTo(760, startY + 15); ctx.strokeStyle = "#444"; ctx.lineWidth = 2; ctx.stroke();
-        ctx.font = "20px Consolas";
-        let aggCorrect = 0; let aggWrong = 0;
+        const safeName = name.replace(/ /g, '_');
+
+        // --- Measure longest level name to set column width ---
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+
+        let maxNameWidth = 0;
+        const levelNames = [];
         for (let i = 1; i <= NUM_LEVELS; i++) {
-            const s = gameStats.levels[i]; const y = startY + 50 + (i - 1) * rowHeight;
-            const totalQ = s.correct + s.incorrect; const acc = totalQ > 0 ? Math.round((s.correct / totalQ) * 100) + "%" : "-";
-            const mins = Math.floor(s.timePlayed / 60); aggCorrect += s.correct; aggWrong += s.incorrect;
-            ctx.fillStyle = "#6a9955"; ctx.fillText("Lvl " + i, 50, y);
-            ctx.fillStyle = "#d4d4d4"; ctx.fillText(Math.round(s.highScore), 150, y); ctx.fillText(s.correct, 300, y); ctx.fillText(s.incorrect, 420, y); ctx.fillText(acc, 520, y); ctx.fillText(`${mins}m`, 650, y);
+            const btn = document.querySelector(`.btn-level-${i} .sub-text`);
+            const levelName = btn ? `${i}. ${btn.innerHTML}` : `${i}. Level ${i}`;
+            levelNames.push(levelName);
+            maxNameWidth = Math.max(maxNameWidth, tempCtx.measureText(levelName).width);
         }
-        const totalY = startY + 50 + (NUM_LEVELS * rowHeight) + 10;
-        ctx.beginPath(); ctx.moveTo(40, totalY - 35); ctx.lineTo(760, totalY - 35); ctx.strokeStyle = "#444"; ctx.lineWidth = 2; ctx.stroke();
-        const aggTotal = aggCorrect + aggWrong; const aggAcc = aggTotal > 0 ? Math.round((aggCorrect / aggTotal) * 100) + "%" : "-";
-        ctx.fillStyle = "#ce9178"; ctx.font = "bold 20px Consolas"; ctx.fillText("TOTAL", 50, totalY);
-        ctx.fillStyle = "#d4d4d4"; ctx.fillText("-", 150, totalY); ctx.fillText(aggCorrect, 300, totalY); ctx.fillText(aggWrong, 420, totalY); ctx.fillText(aggAcc, 520, totalY);
 
-        let examY = 1200;
-        const drawExamBlock = (id, title, yPos) => {
-             if(!gameStats.exams[id]) return;
-             const ex = gameStats.exams[id];
-             ctx.fillStyle = "#ffd700"; ctx.font = "bold 25px Consolas"; ctx.textAlign = "center";
-             ctx.fillText(title, 400, yPos);
-             ctx.font = "20px Consolas"; ctx.fillStyle = "#fff";
-             const pct = (ex.lastScore * 10) + "%";
-             const imp = ex.improvement || 0;
-             ctx.fillText(`Latest: ${ex.lastScore}/10 (${pct})`, 400, yPos + 30);
-             ctx.fillStyle = "#aaa";
-             ctx.fillText(`Best: ${ex.bestScore}/10`, 400, yPos + 55);
-             if (imp > 0) { ctx.fillStyle = "#6a9955"; ctx.fillText(`(+${imp} Improvement)`, 400, yPos + 80); }
-             else if (imp < 0) { ctx.fillStyle = "#f44336"; ctx.fillText(`(${imp} Drop)`, 400, yPos + 80); }
+        // --- Layout constants ---
+        const PADDING = 40;
+        const NAME_COL_WIDTH = Math.min(maxNameWidth + 20, 300); // cap at 300px
+        const NAME_COL_MAX_CHARS = Math.floor(NAME_COL_WIDTH / 10); // approx chars per line at 20px Consolas
+
+        const COL_HIGHSCORE = PADDING + NAME_COL_WIDTH + 20;
+        const COL_CORRECT   = COL_HIGHSCORE + 130;
+        const COL_WRONG     = COL_CORRECT + 110;
+        const COL_ACCURACY  = COL_WRONG + 100;
+        const COL_TIME      = COL_ACCURACY + 110;
+        const CANVAS_WIDTH  = COL_TIME + 80;
+
+        tempCtx.font = "20px Consolas";
+
+        // Helper: wrap text into lines that fit within maxWidth
+        const wrapText = (text, maxWidth, ctx) => {
+            const words = text.split(' ');
+            const lines = [];
+            let current = '';
+            for (const word of words) {
+                const test = current ? `${current} ${word}` : word;
+                if (ctx.measureText(test).width > maxWidth && current) {
+                    lines.push(current);
+                    current = word;
+                } else {
+                    current = test;
+                }
+            }
+            if (current) lines.push(current);
+            return lines;
         };
-        drawExamBlock(1, "EXAM 1: BASICS", examY);
-        drawExamBlock(2, "EXAM 2: VARIABLES", examY + 120);
 
-        const link = document.createElement('a'); link.download = `PythonDefense_${name.replace(/ /g,'_')}_Report.png`; link.href = canvas.toDataURL(); link.click(); closeReportModal();
+        // --- Pre-calculate row heights based on wrapped name lines ---
+        const TABLE_ROW_HEIGHT = 100;
+        const LINE_HEIGHT = 22;
+        const ROW_PADDING = 16;
+        const HEADER_HEIGHT = 200;
+        const TABLE_HEADER_OFFSET = 90;
+        const EXAM_BLOCK_HEIGHT = 120;
+        const EXAM_START_PADDING = 60;
+        const FOOTER_PADDING = 40;
+
+        const rowHeights = [];
+        for (let i = 0; i < NUM_LEVELS; i++) {
+            const lines = wrapText(levelNames[i], NAME_COL_WIDTH, tempCtx);
+            rowHeights.push(Math.max(TABLE_ROW_HEIGHT, lines.length * LINE_HEIGHT + ROW_PADDING));
+        }
+
+        const examIds = Object.keys(EXAM_URLS).map(Number);
+        const tableHeight = TABLE_HEADER_OFFSET + rowHeights.reduce((a, b) => a + b, 0) + TABLE_ROW_HEIGHT; // +1 for totals row
+        const examsHeight = examIds.length * EXAM_BLOCK_HEIGHT;
+        const CANVAS_HEIGHT = HEADER_HEIGHT + tableHeight + EXAM_START_PADDING + examsHeight + FOOTER_PADDING;
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = CANVAS_WIDTH;
+        canvas.height = CANVAS_HEIGHT;
+
+        // --- Background & border ---
+        ctx.fillStyle = "#1e1e1e";
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        ctx.strokeStyle = "#569cd6";
+        ctx.lineWidth = 10;
+        ctx.strokeRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        // --- Header ---
+        ctx.fillStyle = "#569cd6";
+        ctx.font = "bold 40px Consolas";
+        ctx.textAlign = "center";
+        ctx.fillText("PYTHON DEFENSE REPORT", CANVAS_WIDTH / 2, 80);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "30px Consolas";
+        ctx.fillText("Player: " + name, CANVAS_WIDTH / 2, 130);
+
+        const totalMins = Math.floor(gameStats.totalTimePlayed / 60);
+        ctx.fillStyle = "#ce9178";
+        ctx.font = "20px Consolas";
+        ctx.fillText(`Daily Training Time: ${totalMins} mins`, CANVAS_WIDTH / 2, 170);
+
+        // --- Table header ---
+        const startY = HEADER_HEIGHT + 40;
+        ctx.fillStyle = "#d4d4d4";
+        ctx.font = "bold 20px Consolas";
+        ctx.textAlign = "left";
+        ctx.fillText("LEVEL",      PADDING,       startY);
+        ctx.fillText("HIGH SCORE", COL_HIGHSCORE, startY);
+        ctx.fillText("CORRECT",    COL_CORRECT,   startY);
+        ctx.fillText("WRONG",      COL_WRONG,     startY);
+        ctx.fillText("ACCURACY",   COL_ACCURACY,  startY);
+        ctx.fillText("TIME",       COL_TIME,      startY);
+
+        ctx.beginPath();
+        ctx.moveTo(PADDING, startY + 15);
+        ctx.lineTo(CANVAS_WIDTH - PADDING, startY + 15);
+        ctx.strokeStyle = "#444";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // --- Level rows ---
+        ctx.font = "20px Consolas";
+        let aggCorrect = 0;
+        let aggWrong = 0;
+        let currentY = startY + TABLE_ROW_HEIGHT;
+
+        for (let i = 1; i <= NUM_LEVELS; i++) {
+            const s = gameStats.levels[i];
+            const rowH = rowHeights[i - 1];
+            const midY = currentY + rowH / 2 + 7;
+            const totalQ = s.correct + s.incorrect;
+            const acc = totalQ > 0 ? Math.round((s.correct / totalQ) * 100) + "%" : "-";
+            const mins = Math.floor(s.timePlayed / 60);
+            aggCorrect += s.correct;
+            aggWrong += s.incorrect;
+
+            // Alternating row background for extra readability
+            if (i % 2 === 0) {
+                ctx.fillStyle = "#2a2a2a";
+                ctx.fillRect(PADDING, currentY, CANVAS_WIDTH - PADDING * 2, rowH);
+            }
+
+            // Draw wrapped level name
+            const lines = wrapText(levelNames[i - 1], NAME_COL_WIDTH, ctx);
+            const textBlockHeight = lines.length * LINE_HEIGHT;
+            const nameStartY = currentY + (rowH - textBlockHeight) / 2 + LINE_HEIGHT - 4;
+            ctx.fillStyle = "#6a9955";
+            lines.forEach((line, li) => {
+                ctx.fillText(line, PADDING, nameStartY + li * LINE_HEIGHT);
+            });
+
+            // Draw other columns centred vertically in the row
+            ctx.fillStyle = "#d4d4d4";
+            ctx.fillText(Math.round(s.highScore), COL_HIGHSCORE, midY);
+            ctx.fillText(s.correct,               COL_CORRECT,   midY);
+            ctx.fillText(s.incorrect,             COL_WRONG,     midY);
+            ctx.fillText(acc,                     COL_ACCURACY,  midY);
+            ctx.fillText(`${mins}m`,              COL_TIME,      midY);
+
+            // Row bottom border
+            ctx.beginPath();
+            ctx.moveTo(PADDING, currentY + rowH);
+            ctx.lineTo(CANVAS_WIDTH - PADDING, currentY + rowH);
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            currentY += rowH;
+        }
+
+        // --- Totals row ---
+        ctx.beginPath();
+        ctx.moveTo(PADDING, currentY - 10);
+        ctx.lineTo(CANVAS_WIDTH - PADDING, currentY - 10);
+        ctx.strokeStyle = "#444";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        let aggTotal = aggCorrect + aggWrong;
+        let aggAcc = aggTotal > 0 ? Math.round((aggCorrect / aggTotal) * 100) + "%" : "-";
+        ctx.fillStyle = "#ce9178"; ctx.font = "bold 20px Consolas";
+        ctx.fillText("TOTAL",      PADDING,       currentY + 20);
+        ctx.fillStyle = "#d4d4d4";
+        ctx.fillText("-",          COL_HIGHSCORE, currentY + 20);
+        ctx.fillText(aggCorrect,   COL_CORRECT,   currentY + 20);
+        ctx.fillText(aggWrong,     COL_WRONG,     currentY + 20);
+        ctx.fillText(aggAcc,       COL_ACCURACY,  currentY + 20);
+
+        // --- Exam blocks ---
+        const drawExamBlock = (id, yPos) => {
+            if (!gameStats.exams[id]) return;
+            const ex = gameStats.exams[id];
+            const filename = EXAM_URLS[id].split('/').pop().replace('.json', '');
+            const match = filename.match(/(\d+)/);
+            const title = match ? `EXAM ${match[1]}` : `EXAM ${id}`;
+
+            ctx.fillStyle = "#ffd700"; ctx.font = "bold 25px Consolas"; ctx.textAlign = "center";
+            ctx.fillText(title, CANVAS_WIDTH / 2, yPos);
+
+            ctx.font = "20px Consolas";
+            const pct = (ex.lastScore * 10) + "%";
+            ctx.fillStyle = "#fff";
+            ctx.fillText(`Latest: ${ex.lastScore}/10 (${pct})`, CANVAS_WIDTH / 2, yPos + 30);
+            ctx.fillStyle = "#aaa";
+            ctx.fillText(`Best: ${ex.bestScore}/10`, CANVAS_WIDTH / 2, yPos + 55);
+
+            const imp = ex.improvement || 0;
+            if (imp > 0) {
+                ctx.fillStyle = "#6a9955";
+                ctx.fillText(`(+${imp} Improvement)`, CANVAS_WIDTH / 2, yPos + 80);
+            } else if (imp < 0) {
+                ctx.fillStyle = "#f44736";
+                ctx.fillText(`(${imp} Drop)`, CANVAS_WIDTH / 2, yPos + 80);
+            }
+        };
+
+        const examStartY = HEADER_HEIGHT + tableHeight + EXAM_START_PADDING;
+        examIds.forEach((id, index) => {
+            drawExamBlock(id, examStartY + index * EXAM_BLOCK_HEIGHT);
+        });
+
+        // --- Download as PDF using pdf-lib ---
+const { PDFDocument, rgb } = PDFLib;
+
+const pdfDoc = await PDFDocument.create();
+
+// Embed the canvas as a PNG image into the PDF
+const pngDataUrl = canvas.toDataURL('image/png');
+const pngBase64 = pngDataUrl.split(',')[1];
+const pngBytes = Uint8Array.from(atob(pngBase64), c => c.charCodeAt(0));
+const pngImage = await pdfDoc.embedPng(pngBytes);
+
+// Add a page the same size as the canvas
+const page = pdfDoc.addPage([canvas.width, canvas.height]);
+page.drawImage(pngImage, { x: 0, y: 0, width: canvas.width, height: canvas.height });
+
+// --- Embed CSV data in PDF metadata ---
+const csvRows = ["Level,Name,High Score,Correct,Wrong,Accuracy,Time (mins)"];
+for (let i = 1; i <= NUM_LEVELS; i++) {
+    const s = gameStats.levels[i];
+    const totalQ = s.correct + s.incorrect;
+    const acc = totalQ > 0 ? Math.round((s.correct / totalQ) * 100) : 0;
+    const mins = Math.floor(s.timePlayed / 60);
+    const levelName = levelNames[i - 1].replace(/,/g, ';');
+    csvRows.push(`${i},"${levelName}",${Math.round(s.highScore)},${s.correct},${s.incorrect},${acc}%,${mins}`);
+}
+aggTotal = aggCorrect + aggWrong;
+const aggAccNum = aggTotal > 0 ? Math.round((aggCorrect / aggTotal) * 100) : 0;
+csvRows.push(`TOTAL,,-,${aggCorrect},${aggWrong},${aggAccNum}%,-`);
+examIds.forEach(id => {
+    if (!gameStats.exams[id]) return;
+    const ex = gameStats.exams[id];
+    csvRows.push(`Exam ${id},,, ${ex.lastScore}/10,${ex.bestScore}/10,${ex.lastScore * 10}%,-`);
+});
+const csvString = csvRows.join('\n');
+
+pdfDoc.setTitle(`PythonDefense_${safeName}_Report`);
+pdfDoc.setAuthor(name);
+pdfDoc.setSubject(csvString); // CSV hidden in the Subject metadata field
+
+// Save and download
+const pdfBytes = await pdfDoc.save();
+const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+const link = document.createElement('a');
+link.download = `PythonDefense_${safeName}_Report.pdf`;
+link.href = URL.createObjectURL(pdfBlob);
+link.click();
+
+closeReportModal();
     }
 
     function showHelp() { els.menuScreen.classList.remove('active'); els.helpScreen.classList.add('active'); }
