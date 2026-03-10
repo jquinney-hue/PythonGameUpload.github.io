@@ -711,7 +711,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     }
     loadStats();
 
-    const CONFIG = { spawnRate: 2500, baseSpeed: 0.5, ceilingDrop: 50, dangerThreshold: 150 };
+    const CONFIG = { spawnRate: 2500, baseSpeed: 0.1, ceilingDrop: 50, dangerThreshold: 150 };
     let state = {
         isPlaying: false, level: 1, stage: 1, isHard: false, score: 0, blocks: [], selectedBlockId: null,
         lastSpawnTime: 0, ceilingY: 0, gameSpeed: 0, levelBaseSpeed: 0, wellDoneTimeout: null, animationFrameId: null,
