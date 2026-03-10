@@ -354,73 +354,114 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 
 <div id="menu-screen" class="screen active">
     <h1>PYTHON DEFENSE</h1>
+    <div style="display:flex; align-items:center; justify-content:center; gap:20px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span style="color:#aaa; font-size:0.9rem;">HARD MODE</span>
+            <div id="hard-mode-toggle" onclick="toggleHardMode()" style="width:48px; height:26px; background:#444; border:1px solid #666; border-radius:13px; cursor:pointer; position:relative; transition:background 0.2s;">
+                <div id="hard-mode-knob" style="width:20px; height:20px; background:#aaa; border-radius:50%; position:absolute; top:3px; left:3px; transition:left 0.2s;"></div>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span style="color:#aaa; font-size:0.9rem;">HINT MODE</span>
+            <div id="hint-mode-toggle" onclick="toggleHintMode()" style="width:48px; height:26px; background:#444; border:1px solid #666; border-radius:13px; cursor:pointer; position:relative; transition:background 0.2s;">
+                <div id="hint-mode-knob" style="width:20px; height:20px; background:#aaa; border-radius:50%; position:absolute; top:3px; left:3px; transition:left 0.2s;"></div>
+            </div>
+        </div>
+    </div>
+
     <div id="menu-container">
         <!-- Left: Test Panel -->
         <div id="test-panel" class="quadrant">
             <div class="quadrant-header" style="background:#2d2d2d; border-bottom:2px dashed #444; color:#aaa;">DEV LAB</div>
             <div class="quadrant-content">
-                 <button class="btn btn-level" style="background:#444; box-shadow:none; border:1px solid #666; font-size:0.8rem;" onclick="openLoadLevelModal('level')">Load Level JSON</button>
-                 <button class="btn btn-level" style="background:#444; box-shadow:none; border:1px solid #666; font-size:0.8rem;" onclick="openLoadLevelModal('exam')">Load Exam JSON</button>
-                 <div style="margin-top:10px; color:#666; font-size:0.8rem; text-align:center;">Placeholder levels for testing new mechanics</div>
-                 <button class="btn btn-level" style="background:#333; box-shadow:none; border:1px solid #555; font-size:0.8rem; opacity:0.7;">Test A</button>
+                <button class="btn btn-level" style="background:#444; box-shadow:none; border:1px solid #666; font-size:0.8rem;" onclick="openLoadLevelModal('level')">Load Level JSON</button>
+                <button class="btn btn-level" style="background:#444; box-shadow:none; border:1px solid #666; font-size:0.8rem;" onclick="openLoadLevelModal('exam')">Load Exam JSON</button>
             </div>
         </div>
 
-        <!-- Right: Main Grid -->
-        <div id="main-menu-grid">
-            <!-- Q1: Stage 1 -->
-            <div class="quadrant">
-                <div class="quadrant-header">Stage 1: Errors, print & comments</div>
-                <div class="quadrant-content">
-                    <div class="level-row"><button class="btn btn-level btn-level-1" onclick="startGame(1,false, this)">LEVEL 1<span class="sub-text">Spot the Error</span></button><button class="btn btn-level btn-hard" onclick="startGame(1,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-2" onclick="startGame(2,false, this)">LEVEL 2<span class="sub-text">Fix the Error</span></button><button class="btn btn-level btn-hard" onclick="startGame(2,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-3" onclick="startGame(3,false, this)">LEVEL 3<span class="sub-text">Match Print</span></button><button class="btn btn-level btn-hard" onclick="startGame(3,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-4" onclick="startGame(4,false, this)">LEVEL 4<span class="sub-text">Write Print</span></button><button class="btn btn-level btn-hard" onclick="startGame(4,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-5" onclick="startGame(5,false, this)">LEVEL 5<span class="sub-text">Comment & Print</span></button><button class="btn btn-level btn-hard" onclick="startGame(5,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-6" onclick="startGame(6,false, this)">LEVEL 6<span class="sub-text">2 Comments & Prints</span></button><button class="btn btn-level btn-hard" onclick="startGame(6,true, this)">HARD</button></div>
-                    <button class="btn btn-exam" onclick="startExam(1, this)">TAKE EXAM 1</button>
+        <!-- Right: Page switcher + grids -->
+        <div style="display:flex; flex-direction:column; flex-grow:1; overflow:hidden;">
+
+            <!-- Page switch buttons -->
+            <div style="display:flex; gap:8px; justify-content:center; margin-bottom:10px; flex-shrink:0;">
+                <button id="menu-btn-1" class="btn btn-level" onclick="setMenuPage(1)" style="background:var(--accent-green);">PAGE 1</button>
+                <button id="menu-btn-2" class="btn btn-level" onclick="setMenuPage(2)" style="background:#444;">PAGE 2</button>
+            </div>
+
+            <!-- Page 1 -->
+            <div id="menu-page-1" style="display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:10px; flex-grow:1; overflow:hidden;">
+                <!-- Q1: Stage 1 -->
+                <div class="quadrant">
+                    <div class="quadrant-header">Stage 1: Errors, print & comments</div>
+                    <div class="quadrant-content">
+                        <div class="level-row"><button class="btn btn-level btn-level-1" onclick="startGame(1, hardMode, this)">LEVEL 1<span class="sub-text">Spot the Error</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-2" onclick="startGame(2, hardMode, this)">LEVEL 2<span class="sub-text">Fix the Error</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-3" onclick="startGame(3, hardMode, this)">LEVEL 3<span class="sub-text">Match Print</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-4" onclick="startGame(4, hardMode, this)">LEVEL 4<span class="sub-text">Write Print</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-5" onclick="startGame(5, hardMode, this)">LEVEL 5<span class="sub-text">Comment & Print</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-6" onclick="startGame(6, hardMode, this)">LEVEL 6<span class="sub-text">2 Comments & Prints</span></button></div>
+                        <button class="btn btn-exam" onclick="startExam(1, this)">TAKE EXAM 1</button>
+                    </div>
+                </div>
+                <!-- Q2: Stage 2 -->
+                <div class="quadrant">
+                    <div class="quadrant-header">Stage 2: Variables</div>
+                    <div class="quadrant-content">
+                        <div class="level-row"><button class="btn btn-level btn-level-7" onclick="startGame(7, hardMode, this)">LEVEL 7<span class="sub-text">Match Variable</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-8" onclick="startGame(8, hardMode, this)">LEVEL 8<span class="sub-text">Write Variable</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-9" onclick="startGame(9, hardMode, this)">LEVEL 9<span class="sub-text">Comment & Assign</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-10" onclick="startGame(10, hardMode, this)">LEVEL 10<span class="sub-text">Assign & Print</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-11" onclick="startGame(11, hardMode, this)">LEVEL 11<span class="sub-text">Match Output</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-12" onclick="startGame(12, hardMode, this)">LEVEL 12<span class="sub-text">Write & Print Var</span></button></div>
+                        <button class="btn btn-exam" onclick="startExam(2, this)">TAKE EXAM 2</button>
+                    </div>
+                </div>
+                <!-- Q3: Stage 3 -->
+                <div class="quadrant">
+                    <div class="quadrant-header">Stage 3: Input</div>
+                    <div class="quadrant-content">
+                        <div class="level-row"><button class="btn btn-level btn-level-13" onclick="startGame(13, hardMode, this)">LEVEL 13<span class="sub-text">Match Input</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-14" onclick="startGame(14, hardMode, this)">LEVEL 14<span class="sub-text">Write Input</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-15" onclick="startGame(15, hardMode, this)">LEVEL 15<span class="sub-text">Comment & Input</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-16" onclick="startGame(16, hardMode, this)">LEVEL 16<span class="sub-text">⚠ Broken</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-17" onclick="startGame(17, hardMode, this)">LEVEL 17<span class="sub-text">Spot Data Type</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-18" onclick="startGame(18, hardMode, this)">LEVEL 18<span class="sub-text">Cast Data Type</span></button></div>
+                    </div>
+                </div>
+                <!-- Q4: Stage 4 -->
+                <div class="quadrant">
+                    <div class="quadrant-header">Stage 4: Selection</div>
+                    <div class="quadrant-content">
+                        <div class="level-row"><button class="btn btn-level btn-level-19" onclick="startGame(19, hardMode, this)">LEVEL 19<span class="sub-text">Match Operator</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-20" onclick="startGame(20, hardMode, this)">LEVEL 20<span class="sub-text">Write Operator</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-21" onclick="startGame(21, hardMode, this)">LEVEL 21<span class="sub-text">Match If Statement</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-22" onclick="startGame(22, hardMode, this)">LEVEL 22<span class="sub-text">Write If Statement</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-23" onclick="startGame(23, hardMode, this)">LEVEL 23<span class="sub-text">Match Logic Operators</span></button></div>
+                        <div class="level-row"><button class="btn btn-level btn-level-24" onclick="startGame(24, hardMode, this)">LEVEL 24<span class="sub-text">Write Logic Operators</span></button></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Q2: Stage 2 -->
-            <div class="quadrant">
-                <div class="quadrant-header">Stage 2: Variables</div>
-                <div class="quadrant-content">
-                    <div class="level-row"><button class="btn btn-level btn-level-7" onclick="startGame(7,false, this)">LEVEL 7<span class="sub-text">Match Variable</span></button><button class="btn btn-level btn-hard" onclick="startGame(7,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-8" onclick="startGame(8,false, this)">LEVEL 8<span class="sub-text">Write Variable</span></button><button class="btn btn-level btn-hard" onclick="startGame(8,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-9" onclick="startGame(9,false, this)">LEVEL 9<span class="sub-text">Comment & Assign</span></button><button class="btn btn-level btn-hard" onclick="startGame(9,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-10" onclick="startGame(10,false, this)">LEVEL 10<span class="sub-text">Assign & Print</span></button><button class="btn btn-level btn-hard" onclick="startGame(10,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-11" onclick="startGame(11,false, this)">LEVEL 11<span class="sub-text">Match Output</span></button><button class="btn btn-level btn-hard" onclick="startGame(11,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-12" onclick="startGame(12,false, this)">LEVEL 12<span class="sub-text">Write & Print Var</span></button><button class="btn btn-level btn-hard" onclick="startGame(12,true, this)">HARD</button></div>
-                    <button class="btn btn-exam" onclick="startExam(2, this)">TAKE EXAM 2</button>
+            <!-- Page 2 -->
+            <div id="menu-page-2" style="display:none; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:10px; flex-grow:1; overflow:hidden;">
+                <div class="quadrant">
+                    <div class="quadrant-header">Stage 5: Selection Part 2</div>
+                    <div class="level-row"><button class="btn btn-level btn-level-25" onclick="startGame(25, hardMode, this)">LEVEL 25<span class="sub-text">Write If With Print</span></button></div>
+                </div>
+                <div class="quadrant">
+                    <div class="quadrant-header">Stage 6: Placeholder</div>
+                    <div class="quadrant-content"><p style="color:#aaa;">Coming soon...</p></div>
+                </div>
+                <div class="quadrant">
+                    <div class="quadrant-header">Stage 7: Placeholder</div>
+                    <div class="quadrant-content"><p style="color:#aaa;">Coming soon...</p></div>
+                </div>
+                <div class="quadrant">
+                    <div class="quadrant-header">Stage 8: Placeholder</div>
+                    <div class="quadrant-content"><p style="color:#aaa;">Coming soon...</p></div>
                 </div>
             </div>
 
-            <!-- Q3 -->
-            <div class="quadrant">
-                <div class="quadrant-header">Stage 3: Input</div>
-                <div class="quadrant-content">
-                    <div class="level-row"><button class="btn btn-level btn-level-13" onclick="startGame(13,false, this)">LEVEL 13<span class="sub-text">Match Input</span></button><button class="btn btn-level btn-hard" onclick="startGame(13,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-14" onclick="startGame(14,false, this)">LEVEL 14<span class="sub-text">Write Input</span></button><button class="btn btn-level btn-hard" onclick="startGame(14,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-15" onclick="startGame(15,false, this)">LEVEL 15<span class="sub-text">Comment & Input</span></button><button class="btn btn-level btn-hard" onclick="startGame(15,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-16" onclick="startGame(16,false, this)">LEVEL 16<span class="sub-text">⚠ Broken</span></button><button class="btn btn-level btn-hard" onclick="startGame(16,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-17" onclick="startGame(17,false, this)">LEVEL 17<span class="sub-text">Spot Data Type</span></button><button class="btn btn-level btn-hard" onclick="startGame(17,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-18" onclick="startGame(18,false, this)">LEVEL 18<span class="sub-text">Cast Data Type</span></button><button class="btn btn-level btn-hard" onclick="startGame(18,true, this)">HARD</button></div>
-                </div>
-            </div>
-
-            <!-- Q4 -->
-            <div class="quadrant">
-                <div class="quadrant-header">Stage 4: Selection</div>
-                <div class="quadrant-content">
-                    <div class="level-row"><button class="btn btn-level btn-level-19" onclick="startGame(19,false, this)">LEVEL 19<span class="sub-text">Match Operator</span></button><button class="btn btn-level btn-hard" onclick="startGame(19,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-20" onclick="startGame(20,false, this)">LEVEL 20<span class="sub-text">Write Operator</span></button><button class="btn btn-level btn-hard" onclick="startGame(20,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-21" onclick="startGame(21,false, this)">LEVEL 21<span class="sub-text">Match If Statement</span></button><button class="btn btn-level btn-hard" onclick="startGame(21,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-22" onclick="startGame(22,false, this)">LEVEL 22<span class="sub-text">Write If Statement</span></button><button class="btn btn-level btn-hard" onclick="startGame(22,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-23" onclick="startGame(23,false, this)">LEVEL 23<span class="sub-text">Match Logic Operators</span></button><button class="btn btn-level btn-hard" onclick="startGame(23,true, this)">HARD</button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-24" onclick="startGame(24,false, this)">LEVEL 24<span class="sub-text">Write Logic Operators</span></button><button class="btn btn-level btn-hard" onclick="startGame(24,true, this)">HARD</button></div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -456,10 +497,27 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 
 <div id="load-level-modal">
     <h2 style="color:var(--accent-green)">LOAD CUSTOM LEVEL</h2>
-    <p>Paste the direct URL to the level JSON file.</p>
-    <input type="text" id="level-url-input" placeholder="https://example.com/level.json">
-    <div style="display:flex; gap:10px;">
-        <button class="btn btn-level" onclick="submitCustomLevel()">LOAD</button>
+
+    <!-- Tab switcher -->
+    <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button class="btn btn-level" onclick="setLoadTab('url')" id="tab-url">URL</button>
+        <button class="btn btn-level" onclick="setLoadTab('json')" id="tab-json">RAW JSON</button>
+    </div>
+
+    <!-- URL tab -->
+    <div id="load-tab-url">
+        <p>Paste the direct URL to the level JSON file.</p>
+        <input type="text" id="level-url-input" placeholder="https://example.com/level.json">
+    </div>
+
+    <!-- Raw JSON tab -->
+    <div id="load-tab-json" style="display:none;">
+        <p>Paste raw JSON directly.</p>
+        <textarea id="level-json-input" rows="8" style="width:100%; font-family:monospace; font-size:0.8rem;" placeholder='{"questions": [...]}'></textarea>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:10px;">
+        <button class="btn btn-level" onclick="submitCustomLevelAuto()">LOAD</button>
         <button class="btn btn-close" onclick="closeLoadLevelModal()">CANCEL</button>
     </div>
 </div>
@@ -513,7 +571,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     let globalHistory = {};
     let gameStats = getFreshStats(); 
 
-    var NUM_LEVELS = 24;
+    var NUM_LEVELS = 25;
     const LEVEL_URLS = {
         1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel1.json",
         2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel2.json",
@@ -538,13 +596,46 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         21: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel21.json",
         22: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel22.json",
         23: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel23.json",
-        24: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel24.json"
+        24: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel24.json",
+        25: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel25.json"
     };
 
     const EXAM_URLS = {
         1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/stage1exam.json",
         2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/stage2exam.json"
     };
+
+    let hardMode = false;
+
+    function toggleHardMode() {
+        hardMode = !hardMode;
+        const toggle = document.getElementById('hard-mode-toggle');
+        const knob = document.getElementById('hard-mode-knob');
+        toggle.style.background = hardMode ? 'var(--accent-green)' : '#444';
+        knob.style.left = hardMode ? '25px' : '3px';
+        knob.style.background = hardMode ? '#fff' : '#aaa';
+    }
+
+    let hintMode = false;
+
+    function toggleHintMode() {
+        hintMode = !hintMode;
+        const toggle = document.getElementById('hint-mode-toggle');
+        const knob = document.getElementById('hint-mode-knob');
+        toggle.style.background = hintMode ? 'var(--accent-green)' : '#444';
+        knob.style.left = hintMode ? '25px' : '3px';
+        knob.style.background = hintMode ? '#fff' : '#aaa';
+    }
+
+    let menuPage = 1;
+
+    function setMenuPage(page) {
+        menuPage = page;
+        document.getElementById('menu-page-1').style.display = page === 1 ? 'grid' : 'none';
+        document.getElementById('menu-page-2').style.display = page === 2 ? 'grid' : 'none';
+        document.getElementById('menu-btn-1').style.background = page === 1 ? 'var(--accent-green)' : '#444';
+        document.getElementById('menu-btn-2').style.background = page === 2 ? 'var(--accent-green)' : '#444';
+    }
 
     function getFreshStats() {
         let s = { 
@@ -647,32 +738,52 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         state.loadingType = type;
         const title = type === 'exam' ? "LOAD CUSTOM EXAM" : "LOAD CUSTOM LEVEL";
         document.querySelector('#load-level-modal h2').innerText = title;
+        setLoadTab('url');
         document.getElementById('load-level-modal').classList.add('active');
         document.getElementById('level-url-input').focus();
     }
     function closeLoadLevelModal() { document.getElementById('load-level-modal').classList.remove('active'); }
 
-    async function submitCustomLevel() {
-        const url = document.getElementById('level-url-input').value.trim();
-        if (!url) return;
-        
-        const btn = document.querySelector('#load-level-modal .btn-level');
-        const originalText = btn.innerText;
-        btn.innerText = "LOADING..."; btn.disabled = true;
-        
-        try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error("Fetch failed: " + res.status);
-            const data = await res.json();
-            
-            if (state.loadingType === 'exam') {
-                 if (!data.questions) throw new Error("Invalid Exam JSON: Missing 'questions'");
-            } else {
-                 if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
-                     throw new Error("Invalid Level JSON: Must contain 'questions' array.");
-                 }
+    async function submitCustomLevel(rawJson = null) {
+        let data;
+
+        if (rawJson) {
+            try {
+                data = JSON.parse(rawJson);
+            } catch (e) {
+                alert("Error loading JSON: " + e.message);
+                return;
             }
-            
+        } else {
+            const url = document.getElementById('level-url-input').value.trim();
+            if (!url) return;
+
+            const btn = document.querySelector('#load-level-modal .btn-level');
+            const originalText = btn.innerText;
+            btn.innerText = "LOADING..."; btn.disabled = true;
+
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("Fetch failed: " + res.status);
+                data = await res.json();
+            } catch (e) {
+                alert("Error loading JSON: " + e.message);
+                return;
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        try {
+            if (state.loadingType === 'exam') {
+                if (!data.questions) throw new Error("Invalid Exam JSON: Missing 'questions'");
+            } else {
+                if (!data.questions || !Array.isArray(data.questions) || data.questions.length === 0) {
+                    throw new Error("Invalid Level JSON: Must contain 'questions' array.");
+                }
+            }
+
             closeLoadLevelModal();
 
             if (state.loadingType === 'exam') {
@@ -682,12 +793,26 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                 state.customLevelData = data;
                 startGame('custom', false, null);
             }
-            
         } catch (e) {
             alert("Error loading JSON: " + e.message);
-        } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
+        }
+    }
+
+    let currentLoadTab = 'url';
+
+    function setLoadTab(tab) {
+        currentLoadTab = tab;
+        document.getElementById('load-tab-url').style.display  = tab === 'url'  ? '' : 'none';
+        document.getElementById('load-tab-json').style.display = tab === 'json' ? '' : 'none';
+    }
+
+    function submitCustomLevelAuto() {
+        if (currentLoadTab === 'json') {
+            const raw = document.getElementById('level-json-input').value.trim();
+            if (!raw) return;
+            submitCustomLevel(raw);
+        } else {
+            submitCustomLevel();
         }
     }
 
@@ -900,6 +1025,10 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     }
     
     function handleCustomHints(block) {
+        if (!hintMode) {
+            hideLogicNotice();
+            return;
+        }
         if (block.data.notice) {
             showLogicNotice(block.data.notice);
         } else if (block.data.typoWord && block.data.originalWord) {
@@ -1053,7 +1182,9 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         if (!state.selectedBlockId) return;
         const block = state.blocks.find(b => b.id === state.selectedBlockId);
         if (!block) return;
-        const lines = els.codeArea.value.trim().split('\n').map(l => l.trim()).filter(l => l !== "");
+        console.log('RAW:', JSON.stringify(els.codeArea.value));
+        const lines = els.codeArea.value.trim().split('\n').filter(l => l !== "");
+        console.log('LINES:', lines);
         const type = state.customLevelData.type;
 
         if (type === 'multistep') submitCustomMultiStep(block, lines);
@@ -1065,33 +1196,40 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 
     function submitCustomMultiLineConsole(block, lines) {
         if (lines.length < 2) { processResult(false); return; }
-        
+
+        const hasComment = block.data.keywords && Array.isArray(block.data.keywords);
+
         // Validate Comment
-        const commentLine = lines[0].toLowerCase();
         let commentValid = true;
-        if (!commentLine.startsWith("#")) commentValid = false;
-        if (block.data.keywords && Array.isArray(block.data.keywords)) { 
-            block.data.keywords.forEach(k => { 
-                if (!commentLine.includes(k.toLowerCase())) commentValid = false; 
-            }); 
+        if (hasComment) {
+            const commentLine = lines[0].toLowerCase();
+            if (!commentLine.startsWith("#")) commentValid = false;
+            block.data.keywords.forEach(k => {
+                if (!commentLine.includes(k.toLowerCase())) commentValid = false;
+            });
         }
 
         // Validate Code
-        const codeLine = lines[1];
+        const codeLines = hasComment ? lines.slice(1) : lines;
+        const joined = codeLines.join('\n').trimEnd();
         let codeValid = false;
         if (block.data.useRegex) {
             const regex = new RegExp('^' + block.data.correctCode + '$');
-            codeValid = regex.test(codeLine);
+            console.log('JOINED:', JSON.stringify(joined));
+            console.log('REGEX:', regex);
+            console.log('RESULT:', regex.test(joined));
+            codeValid = regex.test(joined);
         } else {
-             codeValid = codeLine === block.data.correctCode;
+            codeValid = joined === block.data.correctCode;
         }
 
         if (commentValid && codeValid) {
-            // Trigger Console
-            let prompt = "";
-            const match = codeLine.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
-            if(match) prompt = match[1];
-            triggerConsoleInput(block, prompt);
+            const match = joined.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
+            if (match) {
+                triggerConsoleInput(block, match[1]);
+            } else {
+                processResult(true);
+            }
         } else {
             processResult(false);
         }
@@ -1150,14 +1288,34 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     }
 
     function submitCustomMultiLine(block, lines) {
-        if (lines.length < 2) { processResult(false); return; }
-        const commentLine = lines[0].toLowerCase(); const codeLine = lines[1];
+        if (lines.length < 1) { processResult(false); return; }
+
+        const hasComment = block.data.keywords && Array.isArray(block.data.keywords);
+
+        // Validate Comment
         let commentValid = true;
-        if (!commentLine.startsWith("#")) commentValid = false;
-        if (block.data.keywords && Array.isArray(block.data.keywords)) { block.data.keywords.forEach(k => { if (!commentLine.includes(k.toLowerCase())) commentValid = false; }); }
+        if (hasComment) {
+            if (lines.length < 2) { processResult(false); return; }
+            const commentLine = lines[0].toLowerCase();
+            if (!commentLine.startsWith("#")) commentValid = false;
+            block.data.keywords.forEach(k => {
+                if (!commentLine.includes(k.toLowerCase())) commentValid = false;
+            });
+        }
+
+        // Validate Code
+        const codeLines = hasComment ? lines.slice(1) : lines;
+        const joined = codeLines.join('\n').trimEnd();
         let codeValid = false;
-        if (block.data.useRegex) { const regex = new RegExp('^' + block.data.correctCode + '$'); codeValid = regex.test(codeLine); }
-        else { const userClean = codeLine.replace(/'/g, '"'); const correctClean = block.data.correctCode.replace(/'/g, '"'); codeValid = userClean === correctClean; }
+        if (block.data.useRegex) {
+            const regex = new RegExp('^' + block.data.correctCode + '$');
+            codeValid = regex.test(joined);
+        } else {
+            const userClean = joined.replace(/'/g, '"');
+            const correctClean = block.data.correctCode.replace(/'/g, '"');
+            codeValid = userClean === correctClean;
+        }
+
         processResult(commentValid && codeValid);
     }
 
