@@ -447,6 +447,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                 <div class="quadrant">
                     <div class="quadrant-header">Stage 5: Selection Part 2</div>
                     <div class="level-row"><button class="btn btn-level btn-level-25" onclick="startGame(25, hardMode, this)">LEVEL 25<span class="sub-text">Write If With Print</span></button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-26" onclick="startGame(26, hardMode, this)">LEVEL 26<span class="sub-text">Write If With Print And Else</span></button></div>
                 </div>
                 <div class="quadrant">
                     <div class="quadrant-header">Stage 6: Placeholder</div>
@@ -571,7 +572,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     let globalHistory = {};
     let gameStats = getFreshStats(); 
 
-    var NUM_LEVELS = 25;
+    var NUM_LEVELS = 26;
     const LEVEL_URLS = {
         1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel1.json",
         2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel2.json",
@@ -597,7 +598,8 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         22: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel22.json",
         23: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel23.json",
         24: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel24.json",
-        25: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel25.json"
+        25: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel25.json",
+        26: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel26.json"
     };
 
     const EXAM_URLS = {
