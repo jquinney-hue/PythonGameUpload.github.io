@@ -446,12 +446,13 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             <div id="menu-page-2" style="display:none; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:10px; flex-grow:1; overflow:hidden;">
                 <div class="quadrant">
                     <div class="quadrant-header">Stage 5: Selection Part 2</div>
-                    <div class="level-row"><button class="btn btn-level btn-level-25" onclick="startGame(25, hardMode, this)">LEVEL 25<span class="sub-text">Write If With Print</span></button></div>
-                    <div class="level-row"><button class="btn btn-level btn-level-26" onclick="startGame(26, hardMode, this)">LEVEL 26<span class="sub-text">Write If With Print And Else</span></button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-25" onclick="startGame(25, hardMode, this)">LEVEL 25<span class="sub-text">Match If With Print</span></button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-26" onclick="startGame(26, hardMode, this)">LEVEL 26<span class="sub-text">Write If With Print</span></button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-27" onclick="startGame(27, hardMode, this)">LEVEL 27<span class="sub-text">Match If Else With Print</span></button></div>
+                    <div class="level-row"><button class="btn btn-level btn-level-28" onclick="startGame(28, hardMode, this)">LEVEL 28<span class="sub-text">Write If Else With Print</span></button></div>
                 </div>
                 <div class="quadrant">
-                    <div class="quadrant-header">Stage 6: Placeholder</div>
-                    <div class="quadrant-content"><p style="color:#aaa;">Coming soon...</p></div>
+                    <div class="quadrant-header">Stage 6: Iteration</div>
                 </div>
                 <div class="quadrant">
                     <div class="quadrant-header">Stage 7: Placeholder</div>
@@ -572,40 +573,17 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     let globalHistory = {};
     let gameStats = getFreshStats(); 
 
-    var NUM_LEVELS = 26;
-    const LEVEL_URLS = {
-        1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel1.json",
-        2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel2.json",
-        3: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel3.json",
-        4: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel4.json",
-        5: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel5.json",
-        6: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel6.json",
-        7: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel7.json",
-        8: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel8.json",
-        9: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel9.json",
-        10: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel10.json",
-        11: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel11.json",
-        12: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel12.json",
-        13: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel13.json",
-        14: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel14.json",
-        15: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel15.json",
-        16: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel16.json",
-        17: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel17.json",
-        18: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel18.json",
-        19: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel19.json",
-        20: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel20.json",
-        21: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel21.json",
-        22: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel22.json",
-        23: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel23.json",
-        24: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel24.json",
-        25: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel25.json",
-        26: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/testlevel26.json"
-    };
+    var NUM_LEVELS = 28;
+    var NUM_EXAMS = 2;
+    const BASE = "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/";
 
-    const EXAM_URLS = {
-        1: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/stage1exam.json",
-        2: "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/stage2exam.json"
-    };
+    const LEVEL_URLS = Object.fromEntries(
+        Array.from({length: NUM_LEVELS}, (_, i) => [i + 1, `${BASE}testlevel${i + 1}.json`])
+    );
+
+    const EXAM_URLS = Object.fromEntries(
+        Array.from({length: NUM_EXAMS}, (_, i) => [i + 1, `${BASE}stage${i + 1}exam.json`])
+    );
 
     let hardMode = false;
 
