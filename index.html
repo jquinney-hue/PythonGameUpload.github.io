@@ -334,6 +334,12 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 .result-item.correct { border-left-color: var(--accent-green); }
 .result-item.wrong { border-left-color: var(--accent-red); }
 
+.exam-options .btn-option {
+    white-space: pre;
+    font-family: monospace;
+    text-align: left;
+}
+
 @media (max-width: 768px) {
     #menu-container { flex-direction: column; overflow-y: auto; }
     #test-panel { width: 100%; min-height: 150px; flex-shrink: 0; margin-bottom: 10px; }
@@ -452,6 +458,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                         <div class="level-row"><button class="btn btn-level btn-level-16" onclick="startGame(16, hardMode, this)">LEVEL 16<span class="sub-text">Skip Level For Now (Broken)</span></button></div>
                         <div class="level-row"><button class="btn btn-level btn-level-17" onclick="startGame(17, hardMode, this)">LEVEL 17<span class="sub-text">Spot Data Type</span></button></div>
                         <div class="level-row"><button class="btn btn-level btn-level-18" onclick="startGame(18, hardMode, this)">LEVEL 18<span class="sub-text">Cast Data Type</span></button></div>
+                        <button class="btn btn-exam" onclick="startExam(3, this)">TAKE EXAM 3</button>
                     </div>
                 </div>
                 <!-- Q4: Stage 4 -->
@@ -464,6 +471,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                         <div class="level-row"><button class="btn btn-level btn-level-22" onclick="startGame(22, hardMode, this)">LEVEL 22<span class="sub-text">Write If Statement</span></button></div>
                         <div class="level-row"><button class="btn btn-level btn-level-23" onclick="startGame(23, hardMode, this)">LEVEL 23<span class="sub-text">Match Logic Operators</span></button></div>
                         <div class="level-row"><button class="btn btn-level btn-level-24" onclick="startGame(24, hardMode, this)">LEVEL 24<span class="sub-text">Write Logic Operators</span></button></div>
+                        <button class="btn btn-exam" onclick="startExam(4, this)">TAKE EXAM 4</button>
                     </div>
                 </div>
             </div>
@@ -609,7 +617,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     let gameStats = getFreshStats(); 
 
     var NUM_LEVELS = 28;
-    var NUM_EXAMS = 2;
+    var NUM_EXAMS = 4;
     const BASE = "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/";
 
     const LEVEL_URLS = Object.fromEntries(
@@ -674,7 +682,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     function loadStats() {
         const stored = localStorage.getItem(STATS_KEY);
         const today = getTodayKey();
-        
+
         if (stored) {
             try {
                 globalHistory = JSON.parse(stored);
@@ -686,13 +694,14 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         if (!globalHistory[today]) { globalHistory[today] = getFreshStats(); }
         gameStats = globalHistory[today];
 
-        if(!gameStats.levels) gameStats.levels = {};
-        for(let i=1; i<=NUM_LEVELS; i++) {
-            if(!gameStats.levels[i]) gameStats.levels[i] = { highScore: 0, timePlayed: 0, correct: 0, incorrect: 0 };
+        if (!gameStats.levels) gameStats.levels = {};
+        for (let i = 1; i <= NUM_LEVELS; i++) {
+            if (!gameStats.levels[i]) gameStats.levels[i] = { highScore: 0, timePlayed: 0, correct: 0, incorrect: 0 };
         }
-        if(!gameStats.exams) gameStats.exams = { 1: { attempts: 0, bestScore: 0, lastScore: 0 }, 2: { attempts: 0, bestScore: 0, lastScore: 0 } };
-        if(!gameStats.exams[1]) gameStats.exams[1] = { attempts: 0, bestScore: 0, lastScore: 0 };
-        if(!gameStats.exams[2]) gameStats.exams[2] = { attempts: 0, bestScore: 0, lastScore: 0 };
+        if (!gameStats.exams) gameStats.exams = {};
+        for (let i = 1; i <= NUM_EXAMS; i++) {
+            if (!gameStats.exams[i]) gameStats.exams[i] = { attempts: 0, bestScore: 0, lastScore: 0, improvement: 0, lastAnswers: [] };
+        }
     }
 
     function saveStats() {
@@ -1391,7 +1400,16 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                      const k1 = q.keywords[0].toLowerCase(); const k2 = q.keywords[1].toLowerCase();
                      isCorrect = cLine.startsWith('#') && cLine.includes(k1) && cLine.includes(k2) && codeLine === q.correctCode.replace(/'/g, '"');
                  }
-             } else if (q.type === 'extended') {
+                
+             } else if (q.type === 'text_simple') {
+                const answer = val.trim();
+                if (q.useRegex) {
+                    isCorrect = new RegExp(q.correctCode).test(answer);
+                } else {
+                    isCorrect = answer === q.correctCode;
+                }
+            }            
+             else if (q.type === 'extended') {
                  const lines = val.split('\n').map(l => l.trim()).filter(l => l !== '');
                  if (lines.length >= q.tasks.length * 2) {
                      let all = true;
@@ -1450,40 +1468,335 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                      }
                  }
                  isCorrect = track.name.printed && track.age.printed && track.hobby.printed;
-             }
+             } else if (q.type === 'extended_run') {
+                // collect inputs from console if any were typed, or pass empty array
+                const inputs = state.extendedRunInputs || [];
+                isCorrect = validateExtendedRun(q, val, inputs);
+            }
         }
         state.examAnswers.push({ q: q, user: userAnswer, correct: isCorrect });
         state.currentExamIndex++; if (state.currentExamIndex < state.examQuestions.length) { renderExamQuestion(); } else { finishExam(); }
     }
     
     function checkVarAssign(line, name, isString) {
-        const parts = line.split('='); if (parts.length !== 2) return false;
+        const parts = line.split('='); 
+        // Accept bare conversion expression e.g. float(score), int(score)
+        if (parts.length === 1) {
+            const expr = line.trim();
+            if (!isString && /^(int|float)\s*\(\s*\w+\s*\)$/.test(expr)) return true;
+            if (isString && /^str\s*\(\s*\w+\s*\)$/.test(expr)) return true;
+            return false;
+        }
         if (parts[0].trim() !== name) return false;
-        const v = parts[1].trim();
-        if (isString) return /^["'].+["']$/.test(v);
-        return !isNaN(Number(v));
-    }
-    
-    function checkVarAssignInText(text, name, isString) {
-        const lines = text.split('\n');
-        for(let l of lines) { if(checkVarAssign(l, name, isString)) return true; }
+        const v = parts.slice(1).join('=').trim();
+        // Literal values
+        if (isString && /^["'].+["']$/.test(v)) return true;
+        if (!isString && !isNaN(Number(v))) return true;
+        // String input
+        if (isString && /^input\s*\(.*\)$/.test(v)) return true;
+        // Number input with int() or float() casting
+        if (!isString && /^(int|float)\s*\(\s*input\s*\(.*\)\s*\)$/.test(v)) return true;
+        // Conversion expression assigned e.g. score = float(score)
+        if (!isString && /^(int|float)\s*\(\s*\w+\s*\)$/.test(v)) return true;
+        if (isString && /^str\s*\(\s*\w+\s*\)$/.test(v)) return true;
         return false;
     }
 
     function finishExam() {
         const score = state.examAnswers.filter(a => a.correct).length;
-        if(!gameStats.exams[state.activeExamId]) gameStats.exams[state.activeExamId] = { attempts: 0, bestScore: 0, lastScore: 0 };
+        if (!gameStats.exams[state.activeExamId]) gameStats.exams[state.activeExamId] = { attempts: 0, bestScore: 0, lastScore: 0, improvement: 0, lastAnswers: [] };
         const st = gameStats.exams[state.activeExamId];
-        const prevScore = st.lastScore; st.attempts++; st.lastScore = score;
+        const prevScore = st.lastScore;
+        st.attempts++;
+        st.lastScore = score;
         if (score > st.bestScore) st.bestScore = score;
-        st.improvement = score - prevScore; saveStats();
-        els.examScreen.classList.remove('active'); els.examResultsScreen.classList.add('active'); els.examFinalScore.innerText = score;
-        const list = els.examFeedbackList; list.innerHTML = '';
+        st.improvement = score - prevScore;
+
+        // Store per-question breakdown
+        st.lastAnswers = state.examAnswers.map((a, i) => ({
+            q: i + 1,
+            prompt: a.q.prompt,
+            type: a.q.type,
+            correct: a.correct,
+            user: a.user || null
+        }));
+
+        saveStats();
+
+        els.examScreen.classList.remove('active');
+        els.examResultsScreen.classList.add('active');
+        els.examFinalScore.innerText = score;
+
+        const list = els.examFeedbackList;
+        list.innerHTML = '';
         state.examAnswers.forEach((a, i) => {
-            const item = document.createElement('div'); item.className = `result-item ${a.correct ? 'correct' : 'wrong'}`;
+            const item = document.createElement('div');
+            item.className = `result-item ${a.correct ? 'correct' : 'wrong'}`;
             item.innerHTML = `<div style="font-weight:bold; margin-bottom:5px;">Q${i+1}: ${a.q.prompt}</div><div style="font-size:0.9rem; color:#aaa;">Your Answer: ${a.user || "Nothing"}</div>${!a.correct ? `<div style="font-size:0.9rem; color:var(--accent-green);">Fix: ${a.q.explanation}</div>` : ''}`;
             list.appendChild(item);
         });
+    }
+
+    function runPythonLike(code, inputs) {
+        const lines = code.split('\n');
+        const output = [];
+        const vars = {};
+        let inputIndex = 0;
+        let i = 0;
+
+        function getValue(expr) {
+            expr = expr.trim();
+            // String literal
+            if (/^["'].*["']$/.test(expr)) return expr.slice(1, -1);
+            // Number literal
+            if (!isNaN(Number(expr))) return Number(expr);
+            // Variable
+            if (vars[expr] !== undefined) return vars[expr];
+            // Concatenation / comma separated (basic)
+            return expr;
+        }
+
+        function evalExpr(expr) {
+            expr = expr.trim();
+            // String literal
+            if (/^["'].*["']$/.test(expr)) return expr.slice(1, -1);
+            // Number
+            if (!isNaN(Number(expr))) return Number(expr);
+            // input()
+            const inputMatch = expr.match(/^input\s*\(\s*(["'].*["'])?\s*\)$/);
+            if (inputMatch) return inputs[inputIndex++] ?? '';
+            // int() / str() / float() casting
+            const intMatch = expr.match(/^int\s*\((.+)\)$/);
+            if (intMatch) return parseInt(evalExpr(intMatch[1]));
+            const floatMatch = expr.match(/^float\s*\((.+)\)$/);
+            if (floatMatch) return parseFloat(evalExpr(floatMatch[1]));
+            const strMatch = expr.match(/^str\s*\((.+)\)$/);
+            if (strMatch) return String(evalExpr(strMatch[1]));
+            // Variable
+            if (vars[expr] !== undefined) return vars[expr];
+            // f-string (basic)
+            if (/^f["']/.test(expr)) {
+                return expr.slice(2, -1).replace(/\{(\w+)\}/g, (_, v) => vars[v] ?? '');
+            }
+            // String + number concatenation with +
+            if (expr.includes('+')) {
+                const parts = expr.split('+').map(p => evalExpr(p.trim()));
+                return parts.every(p => typeof p === 'number') ? parts.reduce((a, b) => a + b, 0) : parts.join('');
+            }
+            return expr;
+        }
+
+        function evalCondition(cond) {
+            cond = cond.trim();
+            const ops = ['>=', '<=', '!=', '==', '>', '<'];
+            for (const op of ops) {
+                const idx = cond.indexOf(op);
+                if (idx !== -1) {
+                    const left = evalExpr(cond.slice(0, idx).trim());
+                    const right = evalExpr(cond.slice(idx + op.length).trim());
+                    switch (op) {
+                        case '==': return left == right;
+                        case '!=': return left != right;
+                        case '>=': return left >= right;
+                        case '<=': return left <= right;
+                        case '>':  return left > right;
+                        case '<':  return left < right;
+                    }
+                }
+            }
+            return !!evalExpr(cond);
+        }
+
+        function getIndent(line) {
+            return line.match(/^(\s*)/)[1].length;
+        }
+
+        function getBlock(startIndex, baseIndent) {
+            const block = [];
+            let j = startIndex;
+            while (j < lines.length) {
+                const line = lines[j];
+                if (line.trim() === '') { j++; continue; }
+                if (getIndent(line) <= baseIndent) break;
+                block.push(line);
+                j++;
+            }
+            return { block, end: j };
+        }
+
+        function execLines(linesToRun) {
+            let j = 0;
+            while (j < linesToRun.length) {
+                const raw = linesToRun[j];
+                if (raw.trim() === '' || raw.trim().startsWith('#')) { j++; continue; }
+                const line = raw.trim();
+                const indent = getIndent(raw);
+
+                // print()
+                if (/^print\s*\(/.test(line)) {
+                    const inner = line.slice(line.indexOf('(') + 1, line.lastIndexOf(')'));
+                    const parts = splitArgs(inner).map(a => evalExpr(a.trim()));
+                    output.push(parts.join(' '));
+                    j++; continue;
+                }
+
+                // if/else
+                if (/^if\s+/.test(line) && line.endsWith(':')) {
+                    const cond = line.slice(3, -1).trim();
+                    const condResult = evalCondition(cond);
+                    j++;
+                    const ifBlock = [];
+                    while (j < linesToRun.length && linesToRun[j].trim() !== '' && getIndent(linesToRun[j]) > indent) {
+                        ifBlock.push(linesToRun[j]); j++;
+                    }
+                    const elseBlock = [];
+                    if (j < linesToRun.length && linesToRun[j]?.trim() === 'else:') {
+                        j++;
+                        while (j < linesToRun.length && linesToRun[j].trim() !== '' && getIndent(linesToRun[j]) > indent) {
+                            elseBlock.push(linesToRun[j]); j++;
+                        }
+                    }
+                    if (condResult) execLines(ifBlock);
+                    else if (elseBlock.length) execLines(elseBlock);
+                    continue;
+                }
+
+                // for loop
+                const forMatch = line.match(/^for\s+(\w+)\s+in\s+range\s*\((.+)\)\s*:$/);
+                if (forMatch) {
+                    const loopVar = forMatch[1];
+                    const rangeArgs = splitArgs(forMatch[2]).map(a => Number(evalExpr(a.trim())));
+                    let start = 0, end = 0, step = 1;
+                    if (rangeArgs.length === 1) { end = rangeArgs[0]; }
+                    else if (rangeArgs.length === 2) { [start, end] = rangeArgs; }
+                    else { [start, end, step] = rangeArgs; }
+                    j++;
+                    const loopBlock = [];
+                    while (j < linesToRun.length && linesToRun[j].trim() !== '' && getIndent(linesToRun[j]) > indent) {
+                        loopBlock.push(linesToRun[j]); j++;
+                    }
+                    for (let k = start; k < end; k += step) {
+                        vars[loopVar] = k;
+                        execLines(loopBlock);
+                    }
+                    continue;
+                }
+
+                // while loop
+                const whileMatch = line.match(/^while\s+(.+)\s*:$/);
+                if (whileMatch) {
+                    j++;
+                    const loopBlock = [];
+                    while (j < linesToRun.length && linesToRun[j].trim() !== '' && getIndent(linesToRun[j]) > indent) {
+                        loopBlock.push(linesToRun[j]); j++;
+                    }
+                    let safety = 0;
+                    while (evalCondition(whileMatch[1]) && safety++ < 1000) {
+                        execLines(loopBlock);
+                    }
+                    continue;
+                }
+
+                // assignment
+                if (line.includes('=') && !line.includes('==')) {
+                    const eqIdx = line.indexOf('=');
+                    const varName = line.slice(0, eqIdx).trim();
+                    const expr = line.slice(eqIdx + 1).trim();
+                    if (/^\w+$/.test(varName)) vars[varName] = evalExpr(expr);
+                    j++; continue;
+                }
+
+                j++;
+            }
+        }
+
+        function splitArgs(str) {
+            const args = [];
+            let depth = 0, current = '';
+            for (const ch of str) {
+                if (ch === '(' || ch === '[') depth++;
+                else if (ch === ')' || ch === ']') depth--;
+                else if (ch === ',' && depth === 0) { args.push(current); current = ''; continue; }
+                current += ch;
+            }
+            if (current.trim()) args.push(current);
+            return args;
+        }
+
+        execLines(lines);
+        return { output, vars };
+    }
+
+    function validateExtendedRun(q, code, inputs) {
+        let firstRun, secondRun;
+
+        try {
+            firstRun = runPythonLike(code, inputs);
+        } catch (e) {
+            return false;
+        }
+
+        // Check expectedVars against student's own run
+        if (q.expectedVars) {
+            for (const ev of q.expectedVars) {
+                const val = firstRun.vars[ev.name];
+                if (val === undefined) return false;
+                if (ev.type === 'number' && isNaN(Number(val))) return false;
+                if (ev.type === 'string' && typeof val !== 'string') return false;
+                if (ev.strict && ev.value !== undefined && String(val) !== String(ev.value)) return false;
+            }
+        }
+
+        // If testValues exist, re-run with injected values to check expectedOutput
+        if (q.testValues && q.testValues.length && q.expectedOutput && q.expectedOutput.length) {
+            // Build modified code that overrides variables with test values
+            const injections = q.testValues.map(tv => {
+                const val = typeof tv.value === 'string' ? `"${tv.value}"` : tv.value;
+                return `${tv.name} = ${val}`;
+            }).join('\n');
+            const testCode = injections + '\n' + code
+                .split('\n')
+                .filter(line => {
+                    // Remove original assignments for injected vars
+                    const trimmed = line.trim();
+                    return !q.testValues.some(tv => 
+                        new RegExp(`^${tv.name}\\s*=(?!=)`).test(trimmed)
+                    );
+                })
+                .join('\n');
+
+            try {
+                secondRun = runPythonLike(testCode, inputs);
+            } catch (e) {
+                return false;
+            }
+        } else {
+            secondRun = firstRun;
+        }
+
+        // Check expectedOutput against test run
+        if (q.expectedOutput) {
+            for (const eo of q.expectedOutput) {
+                const match = secondRun.output.some(line => {
+                    const lower = line.toLowerCase().replace(/\s+/g, ' ').trim();
+                    if (eo.containsVar !== undefined) {
+                        const varVal = String(secondRun.vars[eo.containsVar] ?? '').toLowerCase();
+                        if (!lower.includes(varVal)) return false;
+                        if (eo.hasMessage) {
+                            const withoutVar = lower.replace(varVal, '').trim();
+                            if (withoutVar.length === 0) return false;
+                        }
+                    }
+                    if (eo.containsStr !== undefined) {
+                        if (!lower.includes(eo.containsStr.toLowerCase())) return false;
+                    }
+                    return true;
+                });
+                if (!match) return false;
+            }
+        }
+
+        return true;
     }
 
     function openReportModal() { els.reportModal.classList.add('active'); els.reportNameInput.focus(); }
@@ -1707,53 +2020,61 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         });
 
         // --- Download as PDF using pdf-lib ---
-const { PDFDocument, rgb } = PDFLib;
+        const { PDFDocument, rgb } = PDFLib;
 
-const pdfDoc = await PDFDocument.create();
+        const pdfDoc = await PDFDocument.create();
 
-// Embed the canvas as a PNG image into the PDF
-const pngDataUrl = canvas.toDataURL('image/png');
-const pngBase64 = pngDataUrl.split(',')[1];
-const pngBytes = Uint8Array.from(atob(pngBase64), c => c.charCodeAt(0));
-const pngImage = await pdfDoc.embedPng(pngBytes);
+        // Embed the canvas as a PNG image into the PDF
+        const pngDataUrl = canvas.toDataURL('image/png');
+        const pngBase64 = pngDataUrl.split(',')[1];
+        const pngBytes = Uint8Array.from(atob(pngBase64), c => c.charCodeAt(0));
+        const pngImage = await pdfDoc.embedPng(pngBytes);
 
-// Add a page the same size as the canvas
-const page = pdfDoc.addPage([canvas.width, canvas.height]);
-page.drawImage(pngImage, { x: 0, y: 0, width: canvas.width, height: canvas.height });
+        // Add a page the same size as the canvas
+        const page = pdfDoc.addPage([canvas.width, canvas.height]);
+        page.drawImage(pngImage, { x: 0, y: 0, width: canvas.width, height: canvas.height });
 
-// --- Embed CSV data in PDF metadata ---
-const csvRows = ["Level,Name,High Score,Correct,Wrong,Accuracy,Time (mins)"];
-for (let i = 1; i <= NUM_LEVELS; i++) {
-    const s = gameStats.levels[i];
-    const totalQ = s.correct + s.incorrect;
-    const acc = totalQ > 0 ? Math.round((s.correct / totalQ) * 100) : 0;
-    const mins = Math.floor(s.timePlayed / 60);
-    const levelName = levelNames[i - 1].replace(/,/g, ';');
-    csvRows.push(`${i},"${levelName}",${Math.round(s.highScore)},${s.correct},${s.incorrect},${acc}%,${mins}`);
-}
-aggTotal = aggCorrect + aggWrong;
-const aggAccNum = aggTotal > 0 ? Math.round((aggCorrect / aggTotal) * 100) : 0;
-csvRows.push(`TOTAL,,-,${aggCorrect},${aggWrong},${aggAccNum}%,-`);
-examIds.forEach(id => {
-    if (!gameStats.exams[id]) return;
-    const ex = gameStats.exams[id];
-    csvRows.push(`Exam ${id},,, ${ex.lastScore}/10,${ex.bestScore}/10,${ex.lastScore * 10}%,-`);
-});
-const csvString = csvRows.join('\n');
+        // --- Embed CSV data in PDF metadata ---
+        const csvRows = ["Level,Name,High Score,Correct,Wrong,Accuracy,Time (mins)"];
+        for (let i = 1; i <= NUM_LEVELS; i++) {
+            const s = gameStats.levels[i];
+            const totalQ = s.correct + s.incorrect;
+            const acc = totalQ > 0 ? Math.round((s.correct / totalQ) * 100) : 0;
+            const mins = Math.floor(s.timePlayed / 60);
+            const levelName = levelNames[i - 1].replace(/,/g, ';');
+            csvRows.push(`${i},"${levelName}",${Math.round(s.highScore)},${s.correct},${s.incorrect},${acc}%,${mins}`);
+        }
+        aggTotal = aggCorrect + aggWrong;
+        const aggAccNum = aggTotal > 0 ? Math.round((aggCorrect / aggTotal) * 100) : 0;
+        csvRows.push(`TOTAL,,-,${aggCorrect},${aggWrong},${aggAccNum}%,-`);
+        examIds.forEach(id => {
+            if (!gameStats.exams[id]) return;
+            const ex = gameStats.exams[id];
+            csvRows.push(`Exam ${id},,, ${ex.lastScore}/10,${ex.bestScore}/10,${ex.lastScore * 10}%,-`);
+            if (ex.lastAnswers && ex.lastAnswers.length) {
+                ex.lastAnswers.forEach(a => {
+                    const result = a.correct ? 'CORRECT' : 'WRONG';
+                    const prompt = (a.prompt || '').replace(/<[^>]+>/g, '').replace(/,/g, ';');
+                    const user = (a.user || 'No answer').replace(/,/g, ';').replace(/\n/g, ' ');
+                    csvRows.push(`Exam ${id} Q${a.q},"${prompt}",${result},"${user}",,, `);
+                });
+            }
+        });
+        const csvString = csvRows.join('\n');
 
-pdfDoc.setTitle(`PythonDefense_${safeName}_Report`);
-pdfDoc.setAuthor(name);
-pdfDoc.setSubject(csvString); // CSV hidden in the Subject metadata field
+        pdfDoc.setTitle(`PythonDefense_${safeName}_Report`);
+        pdfDoc.setAuthor(name);
+        pdfDoc.setSubject(csvString); // CSV hidden in the Subject metadata field
 
-// Save and download
-const pdfBytes = await pdfDoc.save();
-const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-const link = document.createElement('a');
-link.download = `PythonDefense_${safeName}_Report.pdf`;
-link.href = URL.createObjectURL(pdfBlob);
-link.click();
+        // Save and download
+        const pdfBytes = await pdfDoc.save();
+        const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const link = document.createElement('a');
+        link.download = `PythonDefense_${safeName}_Report.pdf`;
+        link.href = URL.createObjectURL(pdfBlob);
+        link.click();
 
-closeReportModal();
+        closeReportModal();
     }
 
     function showHelp() { els.menuScreen.classList.remove('active'); els.helpScreen.classList.add('active'); }
