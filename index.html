@@ -48,8 +48,15 @@ body {
     z-index: 100; background-color: rgba(30, 30, 30, 0.98); transition: opacity 0.3s; padding: 10px; text-align: center;
 }
 .screen.active { display: flex; }
-.screen-content { max-height: 90vh; overflow-y: auto; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;}
-
+.screen-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
 /* HUD */
 #top-bar {
     height: var(--header-height); width: 100%; background-color: #252526; border-bottom: 2px solid #333;
@@ -534,7 +541,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 <div id="exam-results-screen" class="screen">
     <div class="exam-header">EXAM RESULTS</div>
     <h2 style="font-size:3rem; color:var(--accent-gold); margin:10px 0;"><span id="exam-final-score">0</span>/10</h2>
-    <div class="screen-content" id="exam-feedback-list" style="width:100%; flex:1;"></div>
+    <div class="screen-content" id="exam-feedback-list" style="width:100%;"></div>
     <button class="btn btn-close" onclick="resetGame()">MENU</button>
 </div>
 
