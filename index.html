@@ -1434,7 +1434,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         if(btn) { originalText = btn.innerHTML; btn.innerText = "LOADING..."; }
         
         state.inExam = true; state.activeExamId = id; 
-        try {
+        try {   
             let data = null;
             if (id === 'custom') { data = state.customExamData; } 
             else {
@@ -1814,6 +1814,11 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     function validateExtendedRun(q, code, inputs) {
         let firstRun, secondRun;
 
+        // Build positional inputs from testValues if present, otherwise use passed inputs
+        const testInputs = (q.testValues && q.testValues.length)
+            ? q.testValues.map(tv => tv.value)
+            : inputs;
+
         try {
             firstRun = runPythonLike(code, inputs);
         } catch (e) {
@@ -1823,34 +1828,28 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         // Check expectedVars against student's own run
         if (q.expectedVars) {
             for (const ev of q.expectedVars) {
-                const val = firstRun.vars[ev.name];
+                // Try exact name first, then aliases
+                let val = firstRun.vars[ev.name];
+                if (val === undefined && ev.aliases) {
+                    for (const alias of ev.aliases) {
+                        if (firstRun.vars[alias] !== undefined) {
+                            val = firstRun.vars[alias];
+                            break;
+                        }
+                    }
+                }
                 if (val === undefined) return false;
-                if (ev.type === 'number' && isNaN(Number(val))) return false;
-                if (ev.type === 'string' && typeof val !== 'string') return false;
+                if (ev.expectedString && typeof val !== 'string') return false;
+                if (ev.expectedInt && !Number.isInteger(Number(val))) return false;
+                if (ev.expectedFloat && (isNaN(parseFloat(val)) || !isFinite(val))) return false;
                 if (ev.strict && ev.value !== undefined && String(val) !== String(ev.value)) return false;
             }
         }
 
-        // If testValues exist, re-run with injected values to check expectedOutput
+        // If testValues exist, re-run with injected values positionally as inputs
         if (q.testValues && q.testValues.length && q.expectedOutput && q.expectedOutput.length) {
-            // Build modified code that overrides variables with test values
-            const injections = q.testValues.map(tv => {
-                const val = typeof tv.value === 'string' ? `"${tv.value}"` : tv.value;
-                return `${tv.name} = ${val}`;
-            }).join('\n');
-            const testCode = injections + '\n' + code
-                .split('\n')
-                .filter(line => {
-                    // Remove original assignments for injected vars
-                    const trimmed = line.trim();
-                    return !q.testValues.some(tv => 
-                        new RegExp(`^${tv.name}\\s*=(?!=)`).test(trimmed)
-                    );
-                })
-                .join('\n');
-
             try {
-                secondRun = runPythonLike(testCode, inputs);
+                secondRun = runPythonLike(code, testInputs);
             } catch (e) {
                 return false;
             }
