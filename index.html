@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://skulpt.org/js/skulpt.min.js" type="text/javascript"></script>
+<script src="https://skulpt.org/js/skulpt-stdlib.js" type="text/javascript"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Python Error Defense</title>
@@ -294,6 +296,38 @@ body {
 .btn-level-49 { background-color: #e056fd; color: #fff; box-shadow: 0 0 5px rgba(224, 86, 253, 0.4); }
 .btn-level-50 { background-color: #f0932b; color: #fff; box-shadow: 0 0 5px rgba(240, 147, 43, 0.4); }
 
+/* Individual Level Colors */
+.challenge-level-1 { background-color: #ff7675; color: #fff; box-shadow: 0 0 5px rgba(255, 118, 117, 0.4); }
+.challenge-level-2 { background-color: #74b9ff; color: #fff; box-shadow: 0 0 5px rgba(116, 185, 255, 0.4); }
+.challenge-level-3 { background-color: #55efc4; color: #1e1e1e; box-shadow: 0 0 5px rgba(85, 239, 196, 0.4); }
+.challenge-level-4 { background-color: #ffeaa7; color: #1e1e1e; box-shadow: 0 0 5px rgba(255, 234, 167, 0.4); }
+.challenge-level-5 { background-color: #a29bfe; color: #fff; box-shadow: 0 0 5px rgba(162, 155, 254, 0.4); }
+.challenge-level-6 { background-color: #fab1a0; color: #1e1e1e; box-shadow: 0 0 5px rgba(250, 177, 160, 0.4); }
+.challenge-level-7 { background-color: #fdcb6e; color: #1e1e1e; box-shadow: 0 0 5px rgba(253, 203, 110, 0.4); }
+.challenge-level-8 { background-color: #e84393; color: #fff; box-shadow: 0 0 5px rgba(232, 67, 147, 0.4); }
+.challenge-level-9 { background-color: #00cec9; color: #fff; box-shadow: 0 0 5px rgba(0, 206, 201, 0.4); }
+.challenge-level-10 { background-color: #6c5ce7; color: #fff; box-shadow: 0 0 5px rgba(108, 92, 231, 0.4); }
+.challenge-level-11 { background-color: #00b894; color: #fff; box-shadow: 0 0 5px rgba(0, 184, 148, 0.4); }
+.challenge-level-12 { background-color: #fd79a8; color: #fff; box-shadow: 0 0 5px rgba(253, 121, 168, 0.4); }
+.challenge-level-13 { background-color: #0984e3; color: #fff; box-shadow: 0 0 5px rgba(9, 132, 227, 0.4); }
+.challenge-level-14 { background-color: #d63031; color: #fff; box-shadow: 0 0 5px rgba(214, 48, 49, 0.4); }
+.challenge-level-15 { background-color: #b2bec3; color: #1e1e1e; box-shadow: 0 0 5px rgba(178, 190, 195, 0.4); }
+.challenge-level-16 { background-color: #2d3436; color: #fff; box-shadow: 0 0 5px rgba(45, 52, 54, 0.4); }
+.challenge-level-17 { background-color: #e17055; color: #fff; box-shadow: 0 0 5px rgba(225, 112, 85, 0.4); }
+.challenge-level-18 { background-color: #81ecec; color: #1e1e1e; box-shadow: 0 0 5px rgba(129, 236, 236, 0.4); }
+.challenge-level-19 { background-color: #feca57; color: #1e1e1e; box-shadow: 0 0 5px rgba(254, 202, 87, 0.4); }
+.challenge-level-20 { background-color: #ff9ff3; color: #1e1e1e; box-shadow: 0 0 5px rgba(255, 159, 243, 0.4); }
+.challenge-level-21 { background-color: #ff6b6b; color: #fff; box-shadow: 0 0 5px rgba(255, 107, 107, 0.4); }
+.challenge-level-22 { background-color: #48dbfb; color: #1e1e1e; box-shadow: 0 0 5px rgba(72, 219, 251, 0.4); }
+.challenge-level-23 { background-color: #1dd1a1; color: #fff; box-shadow: 0 0 5px rgba(29, 209, 161, 0.4); }
+.challenge-level-24 { background-color: #f368e0; color: #fff; box-shadow: 0 0 5px rgba(243, 104, 224, 0.4); }
+.challenge-level-25 { background-color: #ff9f43; color: #fff; box-shadow: 0 0 5px rgba(255, 159, 67, 0.4); }
+.challenge-level-26 { background-color: #5f27cd; color: #fff; box-shadow: 0 0 5px rgba(95, 39, 205, 0.4); }
+.challenge-level-27 { background-color: #00d2d3; color: #fff; box-shadow: 0 0 5px rgba(0, 210, 211, 0.4); }
+.challenge-level-28 { background-color: #222f3e; color: #fff; box-shadow: 0 0 5px rgba(34, 47, 62, 0.4); }
+.challenge-level-29 { background-color: #10ac84; color: #fff; box-shadow: 0 0 5px rgba(16, 172, 132, 0.4); }
+.challenge-level-30 { background-color: #ee5253; color: #fff; box-shadow: 0 0 5px rgba(238, 82, 83, 0.4); }
+
 .btn-hard { background-color: #8b2c2c; width: 100%; flex: 1; height: 50px; font-size: 0.8rem; border: 2px solid #f44336; color: white; margin: 0; }
 .btn-exam { background-color: var(--accent-gold); color: #1e1e1e; width: 90%; height: 50px; font-size: 1.1rem; box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); border: 2px solid #fff; margin-top: 10px; }
 
@@ -426,6 +460,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             <div style="display:flex; gap:8px; justify-content:center; margin-bottom:10px; flex-shrink:0;">
                 <button id="menu-btn-1" class="btn btn-level" onclick="setMenuPage(1)" style="background:var(--accent-green);">PAGE 1</button>
                 <button id="menu-btn-2" class="btn btn-level" onclick="setMenuPage(2)" style="background:#444;">PAGE 2</button>
+                <button id="menu-btn-3" class="btn btn-level" onclick="setMenuPage(3)" style="background:#444;">GCSE Exam Questions</button>
             </div>
 
             <!-- Page 1 -->
@@ -497,7 +532,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                     </div>
                 </div>
                 <div class="quadrant">
-                    <div class="quadrant-header">Stage 6: Iteration</div>
+                    <div class="quadrant-header">Stage 6: Iteration (For Loops)</div>
                     <div class="quadrant-content">
                         <div class="level-row"><button class="btn btn-level btn-level-29" onclick="startGame(29, hardMode, this)">LEVEL 29<span class="sub-text">Match Range</span></button></div>
                         <div class="level-row"><button class="btn btn-level btn-level-30" onclick="startGame(30, hardMode, this)">LEVEL 30<span class="sub-text">Write the Range</span></button></div>
@@ -509,7 +544,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                     </div>
                 </div>
                 <div class="quadrant">
-                    <div class="quadrant-header">Stage 7: Placeholder</div>
+                    <div class="quadrant-header">Stage 6: Iteration (While Loops)</div>
                     <div class="quadrant-content">
                         <div class="quadrant-content"><p style="color:#aaa;">Coming soon...</p></div>
                     </div>
@@ -521,7 +556,23 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                     </div>
                 </div>
             </div>
-
+            <div id="menu-page-3" style="display:none; grid-template-columns:1fr; grid-template-rows:1fr; gap:10px; flex-grow:1; overflow:hidden;">
+                <div class="quadrant">
+                    <div class="quadrant-header">Questions</div>
+                        <div class="quadrant-content">
+                            <div class="level-row"><button class="btn btn-level challenge-level-1" onclick="startGCSEExam(1, this)">GCSE CHALLENGE 1<span class="sub-text">Items Sold Algorithm</span></button></div>
+                            <div class="level-row"><button class="btn btn-level challenge-level-2" onclick="startGCSEExam(2, this)">GCSE CHALLENGE 2<span class="sub-text">Total Rainfall</span></button></div>
+                            <div class="level-row"><button class="btn btn-level challenge-level-3" onclick="startGCSEExam(3, this)">GCSE CHALLENGE 3<span class="sub-text">Student Pass Count</span></button></div>
+                            <div class="level-row"><button class="btn btn-level challenge-level-4" onclick="startGCSEExam(4, this)">GCSE CHALLENGE 4<span class="sub-text">Total Cost</span></button></div>
+                            <div class="level-row"><button class="btn btn-level challenge-level-5" onclick="startGCSEExam(5, this)">GCSE CHALLENGE 5<span class="sub-text">Highest Temperature</span></button></div>
+                            <div class="level-row"><button class="btn btn-level challenge-level-1" onclick="startGCSEExam(6, this)">GCSE CHALLENGE 6<span class="sub-text">Sentinel Value Total</span></button></div>
+                            <div class="level-row"><button class="btn btn-level challenge-level-2" onclick="startGCSEExam(7, this)">GCSE CHALLENGE 7<span class="sub-text">Count Until Zero</span></button></div>
+                            <div class="level-row"><button class="btn btn-level challenge-level-3" onclick="startGCSEExam(8, this)">GCSE CHALLENGE 8<span class="sub-text">Password Validation</span></button></div>
+                            <div class="level-row"><button class="btn btn-level challenge-level-4" onclick="startGCSEExam(9, this)">GCSE CHALLENGE 9<span class="sub-text">Countdown</span></button></div>
+                            <div class="level-row"><button class="btn btn-level challenge-level-5" onclick="startGCSEExam(10, this)">GCSE CHALLENGE 10<span class="sub-text">Running Total to 100</span></button></div>
+                        </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -532,15 +583,15 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 </div>
 
 <div id="exam-screen" class="screen">
-    <div class="exam-header">FINAL EXAM</div>
-    <div style="color:#aaa; margin-bottom:10px;">Question <span id="exam-q-num">1</span> of 10</div>
+    <div class="exam-header" id="exam-title">FINAL EXAM</div>
+    <div style="color:#aaa; margin-bottom:10px;">Question <span id="exam-q-num">1</span> of <span id="exam-q-total">10</span></div>
     <div id="exam-container" class="exam-question-box"></div>
     <button class="btn btn-fix" id="exam-submit-btn" onclick="submitExamAnswer()">NEXT</button>
 </div>
 
 <div id="exam-results-screen" class="screen">
     <div class="exam-header">EXAM RESULTS</div>
-    <h2 style="font-size:3rem; color:var(--accent-gold); margin:10px 0;"><span id="exam-final-score">0</span>/10</h2>
+    <h2 style="font-size:3rem; color:var(--accent-gold); margin:10px 0;"><span id="exam-final-score">0</span></h2>
     <div class="screen-content" id="exam-feedback-list" style="width:100%;"></div>
     <button class="btn btn-close" onclick="resetGame()">MENU</button>
 </div>
@@ -633,6 +684,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 
     var NUM_LEVELS = 34;
     var NUM_EXAMS = 6;
+    var NUM_GCSE_EXAMS = 10; // increment as you add them
     const BASE = "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/";
 
     const LEVEL_URLS = Object.fromEntries(
@@ -641,6 +693,10 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 
     const EXAM_URLS = Object.fromEntries(
         Array.from({length: NUM_EXAMS}, (_, i) => [i + 1, `${BASE}stage${i + 1}exam.json`])
+    );
+
+    const GCSE_EXAM_URLS = Object.fromEntries(
+        Array.from({length: NUM_GCSE_EXAMS}, (_, i) => [i + 1, `${BASE}gcseexam${i + 1}.json`])
     );
 
     let hardMode = false;
@@ -667,12 +723,20 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 
     let menuPage = 1;
 
-    function setMenuPage(page) {
-        menuPage = page;
-        document.getElementById('menu-page-1').style.display = page === 1 ? 'grid' : 'none';
-        document.getElementById('menu-page-2').style.display = page === 2 ? 'grid' : 'none';
-        document.getElementById('menu-btn-1').style.background = page === 1 ? 'var(--accent-green)' : '#444';
-        document.getElementById('menu-btn-2').style.background = page === 2 ? 'var(--accent-green)' : '#444';
+    function setMenuPage(pageNum) {
+        // Hide all pages
+        document.getElementById('menu-page-1').style.display = 'none';
+        document.getElementById('menu-page-2').style.display = 'none';
+        document.getElementById('menu-page-3').style.display = 'none';
+
+        // Show selected page
+        document.getElementById('menu-page-' + pageNum).style.display = 'grid';
+
+        // Reset button colors (example logic)
+        for (let i = 1; i <= 3; i++) {
+            const btn = document.getElementById('menu-btn-' + i);
+            btn.style.background = (i === pageNum) ? 'var(--accent-green)' : '#444';
+        }
     }
 
     function getFreshStats() {
@@ -1358,22 +1422,52 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         processResult(commentValid && codeValid);
     }
 
-    // --- EXAM LOGIC ---
+    async function startGCSEExam(id, btnElement) {
+        id = String(id);
+
+        const btn = btnElement;
+        let originalText = "";
+        if(btn) { originalText = btn.innerHTML; btn.innerText = "LOADING..."; }
+        
+        state.inExam = true; state.activeExamId = `gcse_${id}`;
+        try {
+            const url = id.startsWith('http') ? id : GCSE_EXAM_URLS[id];
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Failed to load GCSE exam");
+            const data = await res.json();
+            state.examQuestions = data.questions;
+            state.currentExamIndex = 0; state.examAnswers = [];
+            els.menuScreen.classList.remove('active'); els.examScreen.classList.add('active'); renderExamQuestion();
+
+            document.getElementById('exam-title').innerText = data.title || 'FINAL EXAM';
+            document.getElementById('exam-q-total').innerText = data.questions.length;
+
+        } catch (e) { console.error(e); alert("Error: " + e.message); state.inExam = false; }
+        finally { if(btn) btn.innerHTML = originalText; }
+    }
+
     async function startExam(id, btnElement) {
+        id = String(id);
+
         const btn = btnElement;
         let originalText = "";
         if(btn) { originalText = btn.innerHTML; btn.innerText = "LOADING..."; }
         
         state.inExam = true; state.activeExamId = id; 
-        try {
+        try {   
             let data = null;
-            if (id === 'custom') { data = state.customExamData; } 
-            else {
-                 const url = EXAM_URLS[id];
-                 const res = await fetch(url);
-                 if (!res.ok) throw new Error("Failed to load exam");
-                 data = await res.json();
+            if (id === 'custom') {
+                data = state.customExamData;
+            } else {
+                const url = id.startsWith('http') ? id : EXAM_URLS[id];
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("Failed to load exam");
+                data = await res.json();
             }
+
+            document.getElementById('exam-title').innerText = data.title || 'FINAL EXAM';
+            document.getElementById('exam-q-total').innerText = data.questions.length;
+
             state.examQuestions = data.questions;
             state.currentExamIndex = 0; state.examAnswers = [];
             els.menuScreen.classList.remove('active'); els.examScreen.classList.add('active'); renderExamQuestion();
@@ -1461,32 +1555,19 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                          if(p.startsWith('print(') && p.endsWith(')') && p.includes(',') && p.includes(q.targetVar)) isCorrect = true;
                      }
                  }
-             } else if (q.type === 'extended_var') {
-                 const rawLines = val.split('\n');
-                 let track = { name: { assigned: false, printed: false }, age: { assigned: false, printed: false }, hobby: { assigned: false, printed: false } };
-                 for(let rawLine of rawLines) {
-                     let line = rawLine.split('#')[0].trim(); if (line === '') continue;
-                     if (line.includes('=')) {
-                         const parts = line.split('=');
-                         if (parts.length === 2) {
-                             const v = parts[0].trim(); const value = parts[1].trim();
-                             if (track[v]) {
-                                 if (v === 'age') { if (!isNaN(Number(value)) || /^["']\d+["']$/.test(value)) track[v].assigned = true; } 
-                                 else { if (/^["'].+["']$/.test(value)) track[v].assigned = true; }
-                             }
-                         }
-                     }
-                     if (/^print\s*\(/.test(line) && line.endsWith(')')) {
-                         const content = line.substring(line.indexOf('(')+1, line.lastIndexOf(')'));
-                         const cleanContent = content.replace(/["'].*?["']/g, "");
-                         Object.keys(track).forEach(v => { const regex = new RegExp(`\\b${v}\\b`); if (track[v].assigned && regex.test(cleanContent)) { track[v].printed = true; } });
-                     }
-                 }
-                 isCorrect = track.name.printed && track.age.printed && track.hobby.printed;
              } else if (q.type === 'extended_run') {
-                // collect inputs from console if any were typed, or pass empty array
                 const inputs = state.extendedRunInputs || [];
-                isCorrect = validateExtendedRun(q, val, inputs);
+                validateExtendedRun(q, val, inputs).then(result => {
+                    isCorrect = result;
+                    state.examAnswers.push({ q, user: userAnswer, correct: isCorrect });
+                    state.currentExamIndex++;
+                    if (state.currentExamIndex < state.examQuestions.length) {
+                        renderExamQuestion();
+                    } else {
+                        finishExam();
+                    }
+                });
+                return; // Exit early — async handles the rest
             }
         }
         state.examAnswers.push({ q: q, user: userAnswer, correct: isCorrect });
@@ -1524,6 +1605,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         const prevScore = st.lastScore;
         st.attempts++;
         st.lastScore = score;
+        st.total = state.examQuestions.length;
         if (score > st.bestScore) st.bestScore = score;
         st.improvement = score - prevScore;
 
@@ -1540,7 +1622,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 
         els.examScreen.classList.remove('active');
         els.examResultsScreen.classList.add('active');
-        els.examFinalScore.innerText = score;
+        els.examFinalScore.innerText = `${score}/${state.examQuestions.length}`;
 
         const list = els.examFeedbackList;
         list.innerHTML = '';
@@ -1549,6 +1631,44 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             item.className = `result-item ${a.correct ? 'correct' : 'wrong'}`;
             item.innerHTML = `<div style="font-weight:bold; margin-bottom:5px;">Q${i+1}: ${a.q.prompt}</div><div style="font-size:0.9rem; color:#aaa;">Your Answer: ${a.user || "Nothing"}</div>${!a.correct ? `<div style="font-size:0.9rem; color:var(--accent-green);">Fix: ${a.q.explanation}</div>` : ''}`;
             list.appendChild(item);
+        });
+    }
+
+    function runRealPython(code, inputValues) {
+        return new Promise((resolve, reject) => {
+            const output = [];
+            let inputIndex = 0;
+
+            Sk.configure({
+                output: (text) => {
+                    const trimmed = text.replace(/\n$/, '');
+                    if (trimmed !== '') output.push(trimmed);
+                },
+                inputfun: (prompt) => {
+                    return Promise.resolve(String(inputValues[inputIndex++] ?? ''));
+                },
+                inputfunTakesPrompt: true,
+                __future__: Sk.python3
+            });
+
+            Sk.misceval.asyncToPromise(() =>
+                Sk.importMainWithBody('<stdin>', false, code, true)
+            ).then(() => {
+                const vars = {};
+                try {
+                    const mod = Sk.globals;
+                    for (const key of Object.keys(mod)) {
+                        if (key.startsWith('__')) continue;
+                        try {
+                            const js = Sk.ffi.remapToJs(mod[key]);
+                            if (js !== undefined && js !== null) vars[key] = js;
+                        } catch (e) {}
+                    }
+                } catch (e) {}
+                resolve({ output, vars });
+            }).catch(e => {
+                reject(e.toString());
+            });
         });
     }
 
@@ -1742,46 +1862,68 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         return { output, vars };
     }
 
-    function validateExtendedRun(q, code, inputs) {
-        let firstRun, secondRun;
+    async function validateExtendedRun(q, code, inputs) {
 
+        // --- New test case system ---
+        if (q.testCases && q.testCases.length) {
+            for (const tc of q.testCases) {
+                let run;
+                try {
+                    run = await runRealPython(code, tc.inputs.map(String));
+                } catch (e) {
+                    return false;
+                }
+                // If anyOutput is true, just check that something was printed
+                if (tc.anyOutput) {
+                    if (run.output.length === 0) return false;
+                    continue;
+                }
+                for (const expected of tc.expectedOutput) {
+                    const found = run.output.some(line =>
+                        line.toLowerCase().replace(/\s+/g, ' ').trim()
+                            .includes(expected.toLowerCase().trim())
+                    );
+                    if (!found) return false;
+                }
+            }
+            return true;
+        }
+
+        // --- Legacy system (expectedVars / testValues / expectedOutput) ---
+        const testInputs = (q.testValues && q.testValues.length)
+            ? q.testValues.map(tv => tv.value)
+            : inputs;
+
+        let firstRun;
         try {
-            firstRun = runPythonLike(code, inputs);
+            firstRun = await runRealPython(code, inputs);
         } catch (e) {
             return false;
         }
 
-        // Check expectedVars against student's own run
         if (q.expectedVars) {
             for (const ev of q.expectedVars) {
-                const val = firstRun.vars[ev.name];
+                let val = firstRun.vars[ev.name];
+                if (val === undefined && ev.aliases) {
+                    for (const alias of ev.aliases) {
+                        if (firstRun.vars[alias] !== undefined) {
+                            val = firstRun.vars[alias];
+                            break;
+                        }
+                    }
+                }
                 if (val === undefined) return false;
-                if (ev.type === 'number' && isNaN(Number(val))) return false;
-                if (ev.type === 'string' && typeof val !== 'string') return false;
+                if (ev.expectedString && typeof val !== 'string') return false;
+                if (ev.expectedInt && !Number.isInteger(Number(val))) return false;
+                if (ev.expectedFloat && (isNaN(parseFloat(val)) || !isFinite(val))) return false;
                 if (ev.strict && ev.value !== undefined && String(val) !== String(ev.value)) return false;
             }
         }
 
-        // If testValues exist, re-run with injected values to check expectedOutput
+        let secondRun;
         if (q.testValues && q.testValues.length && q.expectedOutput && q.expectedOutput.length) {
-            // Build modified code that overrides variables with test values
-            const injections = q.testValues.map(tv => {
-                const val = typeof tv.value === 'string' ? `"${tv.value}"` : tv.value;
-                return `${tv.name} = ${val}`;
-            }).join('\n');
-            const testCode = injections + '\n' + code
-                .split('\n')
-                .filter(line => {
-                    // Remove original assignments for injected vars
-                    const trimmed = line.trim();
-                    return !q.testValues.some(tv => 
-                        new RegExp(`^${tv.name}\\s*=(?!=)`).test(trimmed)
-                    );
-                })
-                .join('\n');
-
             try {
-                secondRun = runPythonLike(testCode, inputs);
+                secondRun = await runRealPython(code, testInputs);
             } catch (e) {
                 return false;
             }
@@ -1789,7 +1931,6 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             secondRun = firstRun;
         }
 
-        // Check expectedOutput against test run
         if (q.expectedOutput) {
             for (const eo of q.expectedOutput) {
                 const match = secondRun.output.some(line => {
@@ -1836,8 +1977,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 
         // --- Layout constants ---
         const PADDING = 40;
-        const NAME_COL_WIDTH = Math.min(maxNameWidth + 20, 300); // cap at 300px
-        const NAME_COL_MAX_CHARS = Math.floor(NAME_COL_WIDTH / 10); // approx chars per line at 20px Consolas
+        const NAME_COL_WIDTH = Math.min(maxNameWidth + 20, 300);
 
         const COL_HIGHSCORE = PADDING + NAME_COL_WIDTH + 20;
         const COL_CORRECT   = COL_HIGHSCORE + 130;
@@ -1848,7 +1988,6 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 
         tempCtx.font = "20px Consolas";
 
-        // Helper: wrap text into lines that fit within maxWidth
         const wrapText = (text, maxWidth, ctx) => {
             const words = text.split(' ');
             const lines = [];
@@ -1866,7 +2005,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             return lines;
         };
 
-        // --- Pre-calculate row heights based on wrapped name lines ---
+        // --- Layout heights ---
         const TABLE_ROW_HEIGHT = 100;
         const LINE_HEIGHT = 22;
         const ROW_PADDING = 16;
@@ -1874,6 +2013,8 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         const TABLE_HEADER_OFFSET = 90;
         const EXAM_BLOCK_HEIGHT = 120;
         const EXAM_START_PADDING = 60;
+        const GCSE_SECTION_HEADER_HEIGHT = 60;
+        const GCSE_EXAM_BLOCK_HEIGHT = 120;
         const FOOTER_PADDING = 40;
 
         const rowHeights = [];
@@ -1883,9 +2024,15 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         }
 
         const examIds = Object.keys(EXAM_URLS).map(Number);
-        const tableHeight = TABLE_HEADER_OFFSET + rowHeights.reduce((a, b) => a + b, 0) + TABLE_ROW_HEIGHT; // +1 for totals row
+        const gcseExamIds = Object.keys(GCSE_EXAM_URLS).map(Number);
+
+        const tableHeight = TABLE_HEADER_OFFSET + rowHeights.reduce((a, b) => a + b, 0) + TABLE_ROW_HEIGHT;
         const examsHeight = examIds.length * EXAM_BLOCK_HEIGHT;
-        const CANVAS_HEIGHT = HEADER_HEIGHT + tableHeight + EXAM_START_PADDING + examsHeight + FOOTER_PADDING;
+        const gcseHeight = gcseExamIds.length > 0
+            ? GCSE_SECTION_HEADER_HEIGHT + gcseExamIds.length * GCSE_EXAM_BLOCK_HEIGHT
+            : 0;
+
+        const CANVAS_HEIGHT = HEADER_HEIGHT + tableHeight + EXAM_START_PADDING + examsHeight + (gcseHeight > 0 ? EXAM_START_PADDING + gcseHeight : 0) + FOOTER_PADDING;
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -1949,13 +2096,11 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             aggCorrect += s.correct;
             aggWrong += s.incorrect;
 
-            // Alternating row background for extra readability
             if (i % 2 === 0) {
                 ctx.fillStyle = "#2a2a2a";
                 ctx.fillRect(PADDING, currentY, CANVAS_WIDTH - PADDING * 2, rowH);
             }
 
-            // Draw wrapped level name
             const lines = wrapText(levelNames[i - 1], NAME_COL_WIDTH, ctx);
             const textBlockHeight = lines.length * LINE_HEIGHT;
             const nameStartY = currentY + (rowH - textBlockHeight) / 2 + LINE_HEIGHT - 4;
@@ -1964,7 +2109,6 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                 ctx.fillText(line, PADDING, nameStartY + li * LINE_HEIGHT);
             });
 
-            // Draw other columns centred vertically in the row
             ctx.fillStyle = "#d4d4d4";
             ctx.fillText(Math.round(s.highScore), COL_HIGHSCORE, midY);
             ctx.fillText(s.correct,               COL_CORRECT,   midY);
@@ -1972,7 +2116,6 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             ctx.fillText(acc,                     COL_ACCURACY,  midY);
             ctx.fillText(`${mins}m`,              COL_TIME,      midY);
 
-            // Row bottom border
             ctx.beginPath();
             ctx.moveTo(PADDING, currentY + rowH);
             ctx.lineTo(CANVAS_WIDTH - PADDING, currentY + rowH);
@@ -2001,23 +2144,25 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         ctx.fillText(aggWrong,     COL_WRONG,     currentY + 20);
         ctx.fillText(aggAcc,       COL_ACCURACY,  currentY + 20);
 
-        // --- Exam blocks ---
-        const drawExamBlock = (id, yPos) => {
-            if (!gameStats.exams[id]) return;
-            const ex = gameStats.exams[id];
-            const filename = EXAM_URLS[id].split('/').pop().replace('.json', '');
+        // --- Exam block helper ---
+        const drawExamBlock = (id, yPos, urlMap, prefix) => {
+            const exKey = prefix ? `${prefix}_${id}` : id;
+            if (!gameStats.exams[exKey] && !gameStats.exams[id]) return;
+            const ex = gameStats.exams[exKey] || gameStats.exams[id];
+            const filename = urlMap[id].split('/').pop().replace('.json', '');
             const match = filename.match(/(\d+)/);
             const title = match ? `EXAM ${match[1]}` : `EXAM ${id}`;
+            const exTotal = ex.total || 10;
+            const pct = Math.round((ex.lastScore / exTotal) * 100) + "%";
 
             ctx.fillStyle = "#ffd700"; ctx.font = "bold 25px Consolas"; ctx.textAlign = "center";
             ctx.fillText(title, CANVAS_WIDTH / 2, yPos);
 
             ctx.font = "20px Consolas";
-            const pct = (ex.lastScore * 10) + "%";
             ctx.fillStyle = "#fff";
-            ctx.fillText(`Latest: ${ex.lastScore}/10 (${pct})`, CANVAS_WIDTH / 2, yPos + 30);
+            ctx.fillText(`Latest: ${ex.lastScore}/${exTotal} (${pct})`, CANVAS_WIDTH / 2, yPos + 30);
             ctx.fillStyle = "#aaa";
-            ctx.fillText(`Best: ${ex.bestScore}/10`, CANVAS_WIDTH / 2, yPos + 55);
+            ctx.fillText(`Best: ${ex.bestScore}/${exTotal}`, CANVAS_WIDTH / 2, yPos + 55);
 
             const imp = ex.improvement || 0;
             if (imp > 0) {
@@ -2029,23 +2174,42 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
             }
         };
 
+        // --- Stage exams ---
         const examStartY = HEADER_HEIGHT + tableHeight + EXAM_START_PADDING;
         examIds.forEach((id, index) => {
-            drawExamBlock(id, examStartY + index * EXAM_BLOCK_HEIGHT);
+            drawExamBlock(id, examStartY + index * EXAM_BLOCK_HEIGHT, EXAM_URLS, null);
         });
+
+        // --- GCSE exams section ---
+        if (gcseExamIds.length > 0) {
+            const gcseStartY = examStartY + examIds.length * EXAM_BLOCK_HEIGHT + EXAM_START_PADDING;
+
+            ctx.beginPath();
+            ctx.moveTo(PADDING, gcseStartY - 20);
+            ctx.lineTo(CANVAS_WIDTH - PADDING, gcseStartY - 20);
+            ctx.strokeStyle = "#ce9178";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = "#ce9178";
+            ctx.font = "bold 30px Consolas";
+            ctx.textAlign = "center";
+            ctx.fillText("GCSE EXAM RESULTS", CANVAS_WIDTH / 2, gcseStartY + 20);
+
+            gcseExamIds.forEach((id, index) => {
+                drawExamBlock(id, gcseStartY + GCSE_SECTION_HEADER_HEIGHT + index * GCSE_EXAM_BLOCK_HEIGHT, GCSE_EXAM_URLS, 'gcse');
+            });
+        }
 
         // --- Download as PDF using pdf-lib ---
         const { PDFDocument, rgb } = PDFLib;
-
         const pdfDoc = await PDFDocument.create();
 
-        // Embed the canvas as a PNG image into the PDF
         const pngDataUrl = canvas.toDataURL('image/png');
         const pngBase64 = pngDataUrl.split(',')[1];
         const pngBytes = Uint8Array.from(atob(pngBase64), c => c.charCodeAt(0));
         const pngImage = await pdfDoc.embedPng(pngBytes);
 
-        // Add a page the same size as the canvas
         const page = pdfDoc.addPage([canvas.width, canvas.height]);
         page.drawImage(pngImage, { x: 0, y: 0, width: canvas.width, height: canvas.height });
 
@@ -2062,10 +2226,12 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         aggTotal = aggCorrect + aggWrong;
         const aggAccNum = aggTotal > 0 ? Math.round((aggCorrect / aggTotal) * 100) : 0;
         csvRows.push(`TOTAL,,-,${aggCorrect},${aggWrong},${aggAccNum}%,-`);
+
         examIds.forEach(id => {
             if (!gameStats.exams[id]) return;
             const ex = gameStats.exams[id];
-            csvRows.push(`Exam ${id},,, ${ex.lastScore}/10,${ex.bestScore}/10,${ex.lastScore * 10}%,-`);
+            const exTotal = ex.total || 10;
+            csvRows.push(`Exam ${id},,, ${ex.lastScore}/${exTotal},${ex.bestScore}/${exTotal},${Math.round((ex.lastScore / exTotal) * 100)}%,-`);
             if (ex.lastAnswers && ex.lastAnswers.length) {
                 ex.lastAnswers.forEach(a => {
                     const result = a.correct ? 'CORRECT' : 'WRONG';
@@ -2075,13 +2241,28 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
                 });
             }
         });
-        const csvString = csvRows.join('\n');
 
+        gcseExamIds.forEach(id => {
+            const exKey = `gcse_${id}`;
+            const ex = gameStats.exams[exKey] || gameStats.exams[id];
+            if (!ex) return;
+            const gcseTotal = ex.total || 10;
+            csvRows.push(`GCSE Exam ${id},,, ${ex.lastScore}/${gcseTotal},${ex.bestScore}/${gcseTotal},${Math.round((ex.lastScore / gcseTotal) * 100)}%,-`);
+            if (ex.lastAnswers && ex.lastAnswers.length) {
+                ex.lastAnswers.forEach(a => {
+                    const result = a.correct ? 'CORRECT' : 'WRONG';
+                    const prompt = (a.prompt || '').replace(/<[^>]+>/g, '').replace(/,/g, ';');
+                    const user = (a.user || 'No answer').replace(/,/g, ';').replace(/\n/g, ' ');
+                    csvRows.push(`GCSE Exam ${id} Q${a.q},"${prompt}",${result},"${user}",,, `);
+                });
+            }
+        });
+
+        const csvString = csvRows.join('\n');
         pdfDoc.setTitle(`PythonDefense_${safeName}_Report`);
         pdfDoc.setAuthor(name);
-        pdfDoc.setSubject(csvString); // CSV hidden in the Subject metadata field
+        pdfDoc.setSubject(csvString);
 
-        // Save and download
         const pdfBytes = await pdfDoc.save();
         const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
         const link = document.createElement('a');
