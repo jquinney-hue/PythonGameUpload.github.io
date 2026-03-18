@@ -359,7 +359,7 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     justify-content: center; align-items: center; flex-direction: column;
 }
 #report-modal.active, #load-level-modal.active { display: flex; }
-#report-name-input, #level-url-input {
+#report-name-input, #level-url-input, #report-firstname-input, #report-lastname-input {
     padding: 10px; font-size: 1.2rem; border-radius: 5px; border: 2px solid var(--accent-blue);
     background: #222; color: white; margin-bottom: 20px; text-align: center; width: 80%; max-width: 400px;
 }
@@ -607,9 +607,10 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
 <div id="report-modal">
     <h2>STUDENT REPORT</h2>
     <p>Enter your name to generate a certificate.</p>
-    <input type="text" id="report-name-input" placeholder="Your Name">
+    <input type="text" id="report-firstname-input" placeholder="First Name">
+    <input type="text" id="report-lastname-input" placeholder="Last Name">
     <div style="display:flex; gap:10px;">
-        <button class="btn btn-level" onclick="generateReport()">GENERATE</button>
+        <button class="btn btn-level" onclick="generateReportClick()">GENERATE</button>
         <button class="btn btn-close" onclick="closeReportModal()">CANCEL</button>
     </div>
 </div>
@@ -840,11 +841,13 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         gameArea: document.getElementById('game-area'), ceiling: document.getElementById('ceiling'), dangerOverlay: document.getElementById('danger-overlay'), logicNotice: document.getElementById('logic-notice'), wellDoneMsg: document.getElementById('well-done-msg'),
         score: document.getElementById('score'), level: document.getElementById('level'), stage: document.getElementById('stage'), finalScore: document.getElementById('final-score'),
         reportModal: document.getElementById('report-modal'), reportNameInput: document.getElementById('report-name-input'),
+        reportFirstNameInput: document.getElementById('report-firstname-input'), reportLastNameInput: document.getElementById('report-lastname-input'),
         controlsText: document.getElementById('controls-text'), controlsMCQ: document.getElementById('controls-mcq'), controlsMulti: document.getElementById('controls-multi'),
         inputLabel: document.getElementById('input-label'), inputLabelMulti: document.getElementById('input-label-multi'),
         codeInput: document.getElementById('code-input'), codeArea: document.getElementById('code-input-area'), 
         optBtns: [document.getElementById('opt-0'), document.getElementById('opt-1'), document.getElementById('opt-2'), document.getElementById('opt-3')],
         examContainer: document.getElementById('exam-container'), examQNum: document.getElementById('exam-q-num'), examFeedbackList: document.getElementById('exam-feedback-list'), examFinalScore: document.getElementById('exam-final-score'),
+        examTitle: document.getElementById('exam-title'), examQTotal: document.getElementById('exam-q-total'),
         consoleBar: document.getElementById('console-bar'), consoleHistory: document.getElementById('console-history'), consoleInputWrapper: document.getElementById('console-input-wrapper'), consoleRealInput: document.getElementById('console-real-input')
     };
 
@@ -1973,8 +1976,19 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
     function openReportModal() { els.reportModal.classList.add('active'); els.reportNameInput.focus(); }
     function closeReportModal() { els.reportModal.classList.remove('active'); }
 
-    async function generateReport() {
-        const name = els.reportNameInput.value.trim() || "Student";
+    function generateReportClick() {
+        const first = els.reportFirstNameInput.value.trim();
+        const last = els.reportLastNameInput.value.trim();
+        if (!first || !last) {
+            alert('Please enter both first and last name.');
+            return;
+        }
+        generateReport(`${first} ${last}`);
+    }
+
+    async function generateReport(nameOverride) {
+        const name = nameOverride || els.reportNameInput?.value?.trim() || "Student";
+        // rest of function unchanged...
         const safeName = name.replace(/ /g, '_');
 
         // --- Measure longest level name to set column width ---
