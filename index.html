@@ -789,6 +789,10 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         for (let i = 1; i <= NUM_EXAMS; i++) {
             if (!gameStats.exams[i]) gameStats.exams[i] = { attempts: 0, bestScore: 0, lastScore: 0, improvement: 0, lastAnswers: [] };
         }
+        for (let i = 1; i <= NUM_GCSE_EXAMS; i++) {
+            const key = `gcse_${i}`;
+            if (!gameStats.exams[key]) gameStats.exams[key] = { attempts: 0, bestScore: 0, lastScore: 0, improvement: 0, lastAnswers: [] };
+        }
     }
 
     function saveStats() {
@@ -984,7 +988,10 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         block.el.remove(); state.blocks = state.blocks.filter(b => b.id !== block.id);
         const points = state.isHard ? 2.5 : 1; state.score += points; els.score.innerText = state.score;
         state.stage = calculateStage(state.score); els.stage.innerText = state.stage;
-        const steps = Math.floor(state.score / 5); let multiplier = 0.10 + (steps * 0.10); if (multiplier > 1.5) multiplier = 1.5;
+        const steps = Math.floor(state.score / 5);
+        let multiplier = 0.10 + (steps * 0.10);
+        const maxMultiplier = state.isHard ? 7.5 : 4.5;
+        if (multiplier > maxMultiplier) multiplier = maxMultiplier;
         state.gameSpeed = state.levelBaseSpeed * multiplier;
         showFloatingText(x, y, "+" + points, "#6a9955");
         if (state.blocks.length === 0) { showWellDone(); spawnBlock(); state.lastSpawnTime = performance.now(); }
@@ -2152,11 +2159,10 @@ p { color: #aaa; text-align: center; max-width: 600px; line-height: 1.4; margin:
         ctx.fillText(aggWrong,     COL_WRONG,     currentY + 20);
         ctx.fillText(aggAcc,       COL_ACCURACY,  currentY + 20);
 
-        // --- Exam block helper ---
         const drawExamBlock = (id, yPos, urlMap, prefix) => {
             const exKey = prefix ? `${prefix}_${id}` : id;
-            if (!gameStats.exams[exKey] && !gameStats.exams[id]) return;
-            const ex = gameStats.exams[exKey] || gameStats.exams[id];
+            const ex = gameStats.exams[exKey];
+            if (!ex) return;
             const filename = urlMap[id].split('/').pop().replace('.json', '');
             const match = filename.match(/(\d+)/);
             const title = match ? `EXAM ${match[1]}` : `EXAM ${id}`;
