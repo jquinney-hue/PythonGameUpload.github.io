@@ -5,6 +5,11 @@
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="https://skulpt.org/js/skulpt.min.js" type="text/javascript"></script>
     <script src="https://skulpt.org/js/skulpt-stdlib.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Python Error Defense</title>
@@ -728,8 +733,26 @@
             flex-grow: 1;
             gap: 15px;
             padding: 10px;
-            overflow: hidden;
+            overflow
+            : hidden;
         }
+
+        .CodeMirror {
+            height: 100%;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+        }
+
+#python-editor-wrapper {
+    height: 50vh;
+    max-height: 50vh;
+    overflow: hidden;
+}
+
+#python-editor-wrapper .CodeMirror {
+    height: 100%;
+}
 
         #test-panel {
             width: 220px;
@@ -2141,6 +2164,8 @@
         </div>
         <div id="python-toolbar">
             <button class="btn btn-fix" onclick="runPython()">▶ RUN</button>
+            <button class="btn btn-level" onclick="savePython()">SAVE</button>
+            <button class="btn btn-level" onclick="loadPython()">LOAD</button>
             <button class="btn btn-level" onclick="clearPythonOutput()">CLEAR</button>
         </div>
         <div id="python-output-label">OUTPUT</div>
@@ -2233,6 +2258,43 @@
         const GCSE_EXAM_URLS = Object.fromEntries(
             Array.from({ length: NUM_GCSE_EXAMS }, (_, i) => [i + 1, `${BASE}gcseexam${i + 1}.json`])
         );
+
+        function savePython() {
+            const code = pythonEditor.getValue();
+            const name = promptFilename('save');
+            if (!name) return;
+
+            const blob = new Blob([code], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function loadPython() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.py';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    pythonEditor.setValue(e.target.result);
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function promptFilename(action) {
+            const raw = prompt(`Enter filename:`, 'untitled.py');
+            if (raw === null) return null;
+            const name = raw.trim();
+            if (!name) return null;
+            return name.endsWith('.py') ? name : name + '.py';
+        }
 
         let hardMode = false;
 
@@ -3671,10 +3733,30 @@
             });
         }
 
+        let pythonEditor = null;
+
         function openPythonInterpreter() {
             document.getElementById('python-interpreter-modal').classList.add('active');
             document.getElementById('python-interpreter-overlay').classList.add('active');
-            document.getElementById('python-input').focus();
+
+            if (!pythonEditor) {
+                pythonEditor = CodeMirror.fromTextArea(document.getElementById('python-input'), {
+                    mode: 'python',
+                    theme: 'dracula',
+                    lineNumbers: true,
+                    indentWithTabs: true,
+                    tabSize: 4,
+                    autofocus: true,
+                    lineWrapping: true,
+                    extraKeys: {
+                        'Ctrl-Enter': runPython,
+                        'Cmd-Enter': runPython,
+                    }
+                });
+            } else {
+                pythonEditor.refresh();
+                pythonEditor.focus();
+            }
         }
 
         function closePythonInterpreter() {
@@ -3687,7 +3769,7 @@
         }
 
         function runPython() {
-            const code = document.getElementById('python-input').value;
+            const code = pythonEditor.getValue();
             const outputEl = document.getElementById('python-output');
             outputEl.innerHTML = '';
 
