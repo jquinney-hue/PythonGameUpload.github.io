@@ -1550,6 +1550,109 @@
             text-align: left;
         }
 
+        #python-interpreter-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 900;
+        }
+
+        #python-interpreter-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 901;
+            background: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 8px;
+            width: 95vw;
+            height: 95vh;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #python-interpreter-modal.active,
+        #python-interpreter-overlay.active {
+            display: flex;
+        }
+
+        #python-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: #2d2d2d;
+            border-bottom: 1px solid #444;
+            font-family: monospace;
+            font-weight: bold;
+            color: #4ec9b0;
+            font-size: 0.95rem;
+        }
+
+        #python-editor-wrapper {
+            flex: 1;
+            min-height: 180px;
+            max-height: 40vh;
+        }
+
+        #python-input {
+            width: 100%;
+            height: 100%;
+            min-height: 180px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: none;
+            border-bottom: 1px solid #444;
+            padding: 12px;
+            resize: vertical;
+            outline: none;
+            box-sizing: border-box;
+            tab-size: 4;
+        }
+
+        #python-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #252526;
+            border-bottom: 1px solid #333;
+        }
+
+        #python-output-label {
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            color: #666;
+            background: #1e1e1e;
+            letter-spacing: 1px;
+        }
+
+        #python-output {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            background: #111;
+            color: #ccc;
+            padding: 10px 12px;
+            min-height: 80px;
+            height: 40vh;
+            max-height: 40vh;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        #python-output .py-error { color: #f44747; }
+        #python-output .py-success { color: #4ec9b0; }
+
+        /* Tab key support indicator */
+        #python-input:focus {
+            background: #1e1e2e;
+        }
+
         @media (max-width: 768px) {
             #menu-container {
                 flex-direction: column;
@@ -1968,6 +2071,7 @@
 
         <div class="bottom-controls">
             <button class="btn btn-report" onclick="openReportModal()">DOWNLOAD REPORT</button>
+            <button class="btn btn-report" onclick="openPythonInterpreter()">WRITE PYTHON</button>
             <button class="btn btn-help" onclick="showHelp()">?</button>
         </div>
     </div>
@@ -2026,6 +2130,24 @@
         </div>
     </div>
 
+    <div id="python-interpreter-modal">
+        <div id="python-modal-header">
+            <span>PYTHON INTERPRETER</span>
+            <button class="btn btn-close" onclick="closePythonInterpreter()">✕</button>
+        </div>
+        <div id="python-editor-wrapper">
+            <textarea id="python-input" spellcheck="false" autocomplete="off" placeholder="# Write Python here...
+    print('Hello, World!')"></textarea>
+        </div>
+        <div id="python-toolbar">
+            <button class="btn btn-fix" onclick="runPython()">▶ RUN</button>
+            <button class="btn btn-level" onclick="clearPythonOutput()">CLEAR</button>
+        </div>
+        <div id="python-output-label">OUTPUT</div>
+        <div id="python-output"></div>
+    </div>
+    <div id="python-interpreter-overlay" onclick="closePythonInterpreter()"></div>
+
     <div id="help-screen" class="screen">
         <div class="screen-content">
             <h1>HOW TO PLAY</h1>
@@ -2069,7 +2191,7 @@
             <div id="input-label" style="color:#aaa; font-size:0.9rem;">Tap a block, then type corrected code:</div>
             <div class="input-group">
                 <input type="text" id="code-input" placeholder="Type code..." autocomplete="off" autocorrect="off"
-                    autocapitalize="off" spellcheck="false">
+    autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitTextAnswer()">
                 <button class="btn btn-fix" onclick="submitTextAnswer()">FIX</button>
             </div>
         </div>
@@ -2116,9 +2238,9 @@
 
         // --- STREAK SYSTEM ---
         const STREAK_REWARDS = [
-            { streak: 5, type: 'bomb' },
-            { streak: 10, type: 'ice' },
-            { streak: 15, type: 'hammer' },
+            { streak: 10, type: 'bomb' },
+            { streak: 20, type: 'ice' },
+            { streak: 30, type: 'hammer' },
         ];
 
         function incrementStreak() {
@@ -3548,6 +3670,67 @@
                 list.appendChild(item);
             });
         }
+
+        function openPythonInterpreter() {
+            document.getElementById('python-interpreter-modal').classList.add('active');
+            document.getElementById('python-interpreter-overlay').classList.add('active');
+            document.getElementById('python-input').focus();
+        }
+
+        function closePythonInterpreter() {
+            document.getElementById('python-interpreter-modal').classList.remove('active');
+            document.getElementById('python-interpreter-overlay').classList.remove('active');
+        }
+
+        function clearPythonOutput() {
+            document.getElementById('python-output').innerHTML = '';
+        }
+
+        function runPython() {
+            const code = document.getElementById('python-input').value;
+            const outputEl = document.getElementById('python-output');
+            outputEl.innerHTML = '';
+
+            let outputText = '';
+
+            Sk.configure({
+                output: (text) => { outputText += text; },
+                read: (filename) => {
+                    if (Sk.builtinFiles?.files[filename] === undefined)
+                        throw new Error("File not found: '" + filename + "'");
+                    return Sk.builtinFiles.files[filename];
+                },
+                execLimit: 5000, // 5s timeout
+            });
+
+            Sk.misceval.asyncToPromise(() =>
+                Sk.importMainWithBody('<stdin>', false, code, true)
+            ).then(() => {
+                outputEl.innerHTML = outputText
+                    ? `<span class="py-success">${escapeHtml(outputText)}</span>`
+                    : `<span style="color:#666">(no output)</span>`;
+            }).catch((err) => {
+                outputEl.innerHTML = `<span class="py-error">${escapeHtml(err.toString())}</span>`;
+            });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // Tab key inserts spaces instead of changing focus
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('python-input').addEventListener('keydown', (e) => {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    document.execCommand('insertText', false, '\t');
+                }
+                // Ctrl+Enter or Cmd+Enter to run
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    runPython();
+                }
+            });
+        });
 
         function runRealPython(code, inputValues) {
             return new Promise((resolve, reject) => {
