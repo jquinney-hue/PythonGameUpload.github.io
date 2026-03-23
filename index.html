@@ -1128,6 +1128,66 @@
             box-shadow: 0 0 5px rgba(240, 147, 43, 0.4);
         }
 
+        .btn-level-51 {
+            background-color: #6ab04c;
+            color: #fff;
+            box-shadow: 0 0 5px rgba(106, 176, 76, 0.4);
+        }
+
+        .btn-level-52 {
+            background-color: #c7ecee;
+            color: #1e1e1e;
+            box-shadow: 0 0 5px rgba(199, 236, 238, 0.4);
+        }
+
+        .btn-level-53 {
+            background-color: #be2edd;
+            color: #fff;
+            box-shadow: 0 0 5px rgba(190, 46, 221, 0.4);
+        }
+
+        .btn-level-54 {
+            background-color: #f9ca24;
+            color: #1e1e1e;
+            box-shadow: 0 0 5px rgba(249, 202, 36, 0.4);
+        }
+
+        .btn-level-55 {
+            background-color: #0652dd;
+            color: #fff;
+            box-shadow: 0 0 5px rgba(6, 82, 221, 0.4);
+        }
+
+        .btn-level-56 {
+            background-color: #ff9f43;
+            color: #1e1e1e;
+            box-shadow: 0 0 5px rgba(255, 159, 67, 0.4);
+        }
+
+        .btn-level-57 {
+            background-color: #ee5a24;
+            color: #fff;
+            box-shadow: 0 0 5px rgba(238, 90, 36, 0.4);
+        }
+
+        .btn-level-58 {
+            background-color: #009432;
+            color: #fff;
+            box-shadow: 0 0 5px rgba(0, 148, 50, 0.4);
+        }
+
+        .btn-level-59 {
+            background-color: #833471;
+            color: #fff;
+            box-shadow: 0 0 5px rgba(131, 52, 113, 0.4);
+        }
+
+        .btn-level-60 {
+            background-color: #1289a7;
+            color: #fff;
+            box-shadow: 0 0 5px rgba(18, 137, 167, 0.4);
+        }
+
         /* Individual Level Colors */
         .challenge-level-1 {
             background-color: #ff7675;
@@ -2043,10 +2103,39 @@
                         </div>
                     </div>
                     <div class="quadrant">
-                        <div class="quadrant-header">Stage 8: Placeholder</div>
-                        <div class="quadrant-content">
+                        <div class="quadrant">
+                            <div class="quadrant-header">Stage 8: Lists (GCSE Level)</div>
                             <div class="quadrant-content">
-                                <p style="color:#aaa;">Coming soon...</p>
+                                <div class="level-row"><button class="btn btn-level btn-level-43"
+                                        onclick="startGame(43, hardMode, this)">LEVEL 43<span class="sub-text">Match List
+                                            Creation</span></button></div>
+                                <div class="level-row"><button class="btn btn-level btn-level-44"
+                                        onclick="startGame(44, hardMode, this)">LEVEL 44<span class="sub-text">Write List
+                                            Creation</span></button></div>
+                                <div class="level-row"><button class="btn btn-level btn-level-45"
+                                        onclick="startGame(45, hardMode, this)">LEVEL 45<span class="sub-text">Match List
+                                            Index</span></button></div>
+                                <div class="level-row"><button class="btn btn-level btn-level-46"
+                                        onclick="startGame(46, hardMode, this)">LEVEL 46<span class="sub-text">Write List
+                                            Index</span></button></div>
+                                <div class="level-row"><button class="btn btn-level btn-level-47"
+                                        onclick="startGame(47, hardMode, this)">LEVEL 47<span class="sub-text">Match List
+                                            Length</span></button></div>
+                                <div class="level-row"><button class="btn btn-level btn-level-48"
+                                        onclick="startGame(48, hardMode, this)">LEVEL 48<span class="sub-text">Write List
+                                            Length</span></button></div>
+                                <div class="level-row"><button class="btn btn-level btn-level-49"
+                                        onclick="startGame(49, hardMode, this)">LEVEL 49<span class="sub-text">Match len()
+                                            Code</span></button></div>
+                                <div class="level-row"><button class="btn btn-level btn-level-50"
+                                        onclick="startGame(50, hardMode, this)">LEVEL 50<span class="sub-text">Write len()
+                                            Code</span></button></div>
+                                <div class="level-row"><button class="btn btn-level btn-level-51"
+                                        onclick="startGame(51, hardMode, this)">LEVEL 51<span class="sub-text">Match Loop
+                                            Through List</span></button></div>
+                                <div class="level-row"><button class="btn btn-level btn-level-52"
+                                        onclick="startGame(52, hardMode, this)">LEVEL 52<span class="sub-text">Write Loop
+                                            Through List</span></button></div>
                             </div>
                         </div>
                     </div>
@@ -2242,7 +2331,7 @@
         let globalHistory = {};
         let gameStats = getFreshStats();
 
-        var NUM_LEVELS = 42;
+        var NUM_LEVELS = 52;
         var NUM_EXAMS = 7;
         var NUM_GCSE_EXAMS = 10; // increment as you add them
         const BASE = "https://raw.githubusercontent.com/jquinney-hue/pythongamejsons/refs/heads/main/";
