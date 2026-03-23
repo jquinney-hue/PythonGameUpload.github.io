@@ -3956,6 +3956,14 @@
             // Single-line incomplete statements — while/for/if with no body
             if (/^(while|for|if|elif|else|def|class)\b/.test(trimmed) && !trimmed.includes('\n')) return false;
 
+            // Multi-line code that starts with a loop but has no variable assignments before it
+            // i.e. the list it references was never defined
+            if (/^for\b/.test(trimmed)) {
+                // Check if there's any assignment in the code
+                const hasAssignment = /^[a-zA-Z_][a-zA-Z0-9_]*\s*=[^=]/m.test(trimmed);
+                if (!hasAssignment) return false;
+            }
+
             // No parentheses or assignment — just an expression or snippet
             if (!/[\(\=]/.test(trimmed)) return false;
 
