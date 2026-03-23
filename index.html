@@ -3264,39 +3264,40 @@
             }
         }
 
-        // --- SUBMISSIONS ---
+        function buildRegex(pattern) {
+            const anchored = pattern.startsWith('^') || pattern.endsWith('$');
+            return new RegExp(anchored ? pattern : '^' + pattern + '$');
+        }
+
         function submitTextAnswer() {
             if (!state.selectedBlockId) return;
             const block = state.blocks.find(b => b.id === state.selectedBlockId);
             const input = els.codeInput.value.trim();
 
-            if (block.data.triggerConsole) {
-                if (block.data.useRegex) {
-                    const regex = new RegExp('^' + block.data.correctCode + '$');
-                    if (regex.test(input)) {
-                        // Extract prompt for console if needed
-                        let prompt = "";
-                        const match = input.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
-                        if (match) prompt = match[1];
-                        triggerConsoleInput(block, prompt);
-                        return;
-                    }
-                } else {
-                    if (input === block.data.correctCode) {
-                        let prompt = "";
-                        const match = input.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
-                        if (match) prompt = match[1];
-                        triggerConsoleInput(block, prompt);
-                        return;
-                    }
-                }
+            const isMatch = block.data.useRegex
+                ? buildRegex(block.data.correctCode).test(input)
+                : input === block.data.correctCode;
+
+            if (!isMatch) { processResult(false); els.codeInput.value = ""; return; }
+
+            const codeToRun = block.data.useRegex ? input : block.data.correctCode;
+            const match = codeToRun.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
+
+            if (match) {
+                block._runnableCode = codeToRun;
+                triggerConsoleInput(block, match[1]);
+                els.codeInput.value = "";
+                return;
             }
-            if (block.data.useRegex) {
-                const regex = new RegExp('^' + block.data.correctCode + '$');
-                processResult(regex.test(input));
-            } else {
-                processResult(input === block.data.correctCode);
-            }
+
+            runRealPython(codeToRun, []).then(({ output }) => {
+                output.forEach(line => logToConsole(line));
+                processResult(true);
+            }).catch(e => {
+                logToConsole("Error: " + e);
+                processResult(false);
+            });
+
             els.codeInput.value = "";
         }
 
@@ -3306,20 +3307,23 @@
             const ans = state.currentOptions[i];
             const isCorrect = ans === block.data.correctCode;
 
-            if (block.data.triggerConsole && isCorrect) {
-                let prompt = "";
-                const match = ans.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
-                if (match) prompt = match[1];
-                triggerConsoleInput(block, prompt);
+            if (!isCorrect) { processResult(false); return; }
+
+            const match = ans.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
+            if (match) {
+                block._runnableCode = ans;
+                triggerConsoleInput(block, match[1]);
                 return;
             }
 
-            let output = null;
-            if (isCorrect) {
-                const matchSimple = ans.match(/print\s*\(\s*["'](.+)["']\s*\)/);
-                if (matchSimple) output = matchSimple[1];
-            }
-            processResult(isCorrect, output);
+            // runRealPython handles non-runnable code silently via isRunnableCode
+            runRealPython(ans, []).then(({ output }) => {
+                output.forEach(line => logToConsole(line));
+                processResult(true);
+            }).catch(e => {
+                logToConsole("Error: " + e);
+                processResult(false);
+            });
         }
 
         function triggerConsoleInput(block, customPrompt = null) {
@@ -3337,47 +3341,62 @@
             els.consoleBar.scrollTop = els.consoleBar.scrollHeight; els.consoleRealInput.focus();
         }
 
-        function handleConsoleInput() {
+        // No changes needed to triggerConsoleInput - it already handles prompts correctly
+// The key change: handleConsoleInput now runs real Python instead of faking output
+
+        async function handleConsoleInput() {
             if (!state.waitingForInput) return;
+
             const val = els.consoleRealInput.value;
             const promptSpan = document.getElementById('console-prompt');
             const promptText = promptSpan ? promptSpan.innerText : "> ";
+
             logToConsole(promptText + val);
-            els.consoleInputWrapper.style.display = 'none'; els.consoleBar.classList.remove('console-flash');
-            hideLogicNotice();
 
-            let output = null;
-            let isCorrect = true;
+            if (!state.collectedInputs) state.collectedInputs = [];
+            state.collectedInputs.push(val);
 
-            if (state.inputBlockId) {
-                const block = state.blocks.find(b => b.id === state.inputBlockId);
-                if (block && block.data.correctCode) {
-                    // Check if the code implies integer input: contains "int(" or regex "int\s*\("
-                    const expectsInt = /int\s*[\(\\]/.test(block.data.correctCode) || block.data.correctCode.includes("int(");
+            const block = state.blocks.find(b => b.id === state.inputBlockId);
 
-                    if (expectsInt) {
-                        // Regex for integer: optional minus sign, one or more digits, no non-digit chars
-                        if (!/^-?\d+$/.test(val.trim())) {
-                            isCorrect = false;
-                        }
-                    }
-
-                    if (isCorrect) {
-                        // Check for print("Msg", var)
-                        const matchMulti = block.data.correctCode.match(/print\s*\(\s*["'](.+?)["']\s*,\s*(\w+)\s*\)/);
-                        if (matchMulti) {
-                            output = matchMulti[1] + " " + val;
-                        } else {
-                            // Fallback: print("Msg")
-                            const matchSimple = block.data.correctCode.match(/print\s*\(\s*["'](.+?)["']\s*\)/);
-                            if (matchSimple && !matchSimple[0].includes(',')) output = matchSimple[1];
-                        }
-                    }
-                }
+            if (!block || (!block.data.correctCode && !block._runnableCode)) {
+                els.consoleInputWrapper.style.display = 'none';
+                els.consoleBar.classList.remove('console-flash');
+                hideLogicNotice();
+                state.waitingForInput = false;
+                state.inputBlockId = null;
+                state.collectedInputs = [];
+                processResult(false);
+                return;
             }
 
-            state.waitingForInput = false; state.inputBlockId = null;
-            processResult(isCorrect, output);
+            const codeToRun = block._runnableCode || block.data.correctCode;
+            const inputCallCount = (codeToRun.match(/\binput\s*\(/g) || []).length;
+
+            if (state.collectedInputs.length < inputCallCount) {
+                const allPrompts = [...codeToRun.matchAll(/input\s*\(\s*["'](.+?)["']\s*\)/g)];
+                const nextPrompt = allPrompts[state.collectedInputs.length];
+                triggerConsoleInput(block, nextPrompt ? nextPrompt[1] : null);
+                return;
+            }
+
+            els.consoleInputWrapper.style.display = 'none';
+            els.consoleBar.classList.remove('console-flash');
+            hideLogicNotice();
+            state.waitingForInput = false;
+            state.inputBlockId = null;
+
+            const inputs = state.collectedInputs;
+            state.collectedInputs = [];
+            block._runnableCode = null; // clean up
+
+            try {
+                const { output } = await runRealPython(codeToRun, inputs);
+                output.forEach(line => logToConsole(line));
+                processResult(true);
+            } catch (e) {
+                logToConsole("Error: " + e);
+                processResult(false);
+            }
         }
 
         function submitMultiAnswer() {
@@ -3391,7 +3410,7 @@
 
             if (type === 'multistep') submitCustomMultiStep(block, lines);
             else if (type === 'var_print') submitCustomVarPrint(block, els.codeArea.value.trim());
-            else if (block.data.triggerConsole) submitCustomMultiLineConsole(block, lines); // Level 15 handler
+            else if (block.data.triggerConsole) submitCustomMultiLineConsole(block, lines);
             else submitCustomMultiLine(block, lines);
             els.codeArea.value = "";
         }
@@ -3401,7 +3420,6 @@
 
             const hasComment = block.data.keywords && Array.isArray(block.data.keywords);
 
-            // Validate Comment
             let commentValid = true;
             if (hasComment) {
                 const commentLine = lines[0].toLowerCase();
@@ -3411,26 +3429,29 @@
                 });
             }
 
-            // Validate Code
             const codeLines = hasComment ? lines.slice(1) : lines;
             const joined = codeLines.join('\n').trimEnd();
             let codeValid = false;
             if (block.data.useRegex) {
-                const regex = new RegExp('^' + block.data.correctCode + '$');
-                console.log('JOINED:', JSON.stringify(joined));
-                console.log('REGEX:', regex);
-                console.log('RESULT:', regex.test(joined));
-                codeValid = regex.test(joined);
+                codeValid = buildRegex(block.data.correctCode).test(joined);
             } else {
                 codeValid = joined === block.data.correctCode;
             }
 
             if (commentValid && codeValid) {
-                const match = joined.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
+                const codeToRun = block.data.useRegex ? joined : block.data.correctCode;
+                const match = codeToRun.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
                 if (match) {
+                    block._runnableCode = codeToRun;
                     triggerConsoleInput(block, match[1]);
                 } else {
-                    processResult(true);
+                    runRealPython(codeToRun, []).then(({ output }) => {
+                        output.forEach(line => logToConsole(line));
+                        processResult(true);
+                    }).catch(e => {
+                        logToConsole("Error: " + e);
+                        processResult(false);
+                    });
                 }
             } else {
                 processResult(false);
@@ -3438,28 +3459,28 @@
         }
 
         function submitCustomVarPrint(block, rawInput) {
-            if (block.data.useRegex) {
-                const regex = new RegExp(block.data.correctCode);
-                // Heuristic output check
-                if (regex.test(rawInput)) {
-                    let output = null;
-                    const lines = rawInput.split('\n');
-                    const assignLine = lines.find(l => l.includes('='));
-                    if (assignLine) {
-                        const parts = assignLine.split('=');
-                        let val = parts[1].trim();
-                        if (val.startsWith('"') || val.startsWith("'")) val = val.substring(1, val.length - 1);
-                        output = val;
-                    }
-                    processResult(true, output);
-                } else { processResult(false); }
-            } else { processResult(rawInput === block.data.correctCode); }
+            const isMatch = block.data.useRegex
+                ? buildRegex(block.data.correctCode).test(rawInput)
+                : rawInput === block.data.correctCode;
+
+            if (isMatch) {
+                const codeToRun = block.data.useRegex ? rawInput : block.data.correctCode;
+                runRealPython(codeToRun, []).then(({ output }) => {
+                    output.forEach(line => logToConsole(line));
+                    processResult(true);
+                }).catch(e => {
+                    logToConsole("Error: " + e);
+                    processResult(false);
+                });
+            } else {
+                processResult(false);
+            }
         }
 
         function submitCustomMultiStep(block, lines) {
             const tasks = block.data.tasks;
             if (!tasks || lines.length < tasks.length * 2) { processResult(false); return; }
-            let allCorrect = true; let outputs = [];
+            let allCorrect = true;
             for (let i = 0; i < tasks.length; i++) {
                 const task = tasks[i];
                 const commentLine = lines[i * 2].toLowerCase();
@@ -3472,21 +3493,30 @@
                 const content = codeLine.substring(codeLine.indexOf('(') + 1, codeLine.lastIndexOf(')')).trim();
                 if (task.validation === 'string') {
                     if (!/^["'].+["']$/.test(content)) { allCorrect = false; break; }
-                    else outputs.push(content.substring(1, content.length - 1));
                 } else if (task.validation === 'number') {
                     if (/^["'].+["']$/.test(content)) {
                         const unquoted = content.substring(1, content.length - 1);
                         if (isNaN(parseInt(unquoted))) { allCorrect = false; break; }
-                        else outputs.push(unquoted);
                     } else {
                         const num = parseInt(content);
                         if (isNaN(num)) { allCorrect = false; break; }
                         if (task.min !== undefined && (num < task.min || num > task.max)) { allCorrect = false; break; }
-                        else outputs.push(num);
                     }
                 }
             }
-            processResult(allCorrect, allCorrect ? outputs.join("\n") : null);
+
+            if (allCorrect) {
+                const codeToRun = lines.filter((_, i) => i % 2 !== 0).join('\n');
+                runRealPython(codeToRun, []).then(({ output }) => {
+                    output.forEach(line => logToConsole(line));
+                    processResult(true);
+                }).catch(e => {
+                    logToConsole("Error: " + e);
+                    processResult(false);
+                });
+            } else {
+                processResult(false);
+            }
         }
 
         function submitCustomMultiLine(block, lines) {
@@ -3494,7 +3524,6 @@
 
             const hasComment = block.data.keywords && Array.isArray(block.data.keywords);
 
-            // Validate Comment
             let commentValid = true;
             if (hasComment) {
                 if (lines.length < 2) { processResult(false); return; }
@@ -3505,20 +3534,35 @@
                 });
             }
 
-            // Validate Code
             const codeLines = hasComment ? lines.slice(1) : lines;
             const joined = codeLines.join('\n').trimEnd();
             let codeValid = false;
             if (block.data.useRegex) {
-                const regex = new RegExp('^' + block.data.correctCode + '$');
-                codeValid = regex.test(joined);
+                codeValid = buildRegex(block.data.correctCode).test(joined);
             } else {
                 const userClean = joined.replace(/'/g, '"');
                 const correctClean = block.data.correctCode.replace(/'/g, '"');
                 codeValid = userClean === correctClean;
             }
 
-            processResult(commentValid && codeValid);
+            if (commentValid && codeValid) {
+                const codeToRun = block.data.useRegex ? joined : block.data.correctCode;
+                const match = codeToRun.match(/input\s*\(\s*["'](.+?)["']\s*\)/);
+                if (match) {
+                    block._runnableCode = codeToRun;
+                    triggerConsoleInput(block, match[1]);
+                } else {
+                    runRealPython(codeToRun, []).then(({ output }) => {
+                        output.forEach(line => logToConsole(line));
+                        processResult(true);
+                    }).catch(e => {
+                        logToConsole("Error: " + e);
+                        processResult(false);
+                    });
+                }
+            } else {
+                processResult(false);
+            }
         }
 
         async function startGCSEExam(id, btnElement) {
@@ -3814,7 +3858,95 @@
             });
         });
 
+        function isRunnableCode(code) {
+            const trimmed = code.trim();
+
+            // Plain text answers like "Syntax Error", "Logic Error"
+            if (/^[A-Z][a-z]+ [A-Z][a-z]+$/.test(trimmed)) return false;
+
+            // Single-line incomplete statements — while/for/if with no body
+            if (/^(while|for|if|elif|else|def|class)\b/.test(trimmed) && !trimmed.includes('\n')) return false;
+
+            // No parentheses or assignment — just an expression or snippet
+            if (!/[\(\=]/.test(trimmed)) return false;
+
+            return true;
+        }
+
+        function injectDefaultVars(code) {
+            const assigned = new Set();
+            const used = {};
+
+            const keywords = new Set([
+                'if','else','elif','while','for','in','and','or','not',
+                'print','input','int','str','float','len','range','True','False','None',
+                'return','def','class','import','from','try','except','pass','break','continue'
+            ]);
+
+            // Strip comments before analysis
+            const codeNoComments = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n');
+
+            // Find ALL assignments — varName = (not ==, !=, <=, >=)
+            for (const m of codeNoComments.matchAll(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*=[^=><!]/gm)) {
+                assigned.add(m[1]);
+            }
+
+            // Find variables used in conditions with a numeric comparison
+            for (const m of codeNoComments.matchAll(/\b([a-zA-Z_][a-zA-Z0-9_]*)\s*([><=!]+)\s*(-?\d+)/g)) {
+                const varName = m[1]; const op = m[2]; const val = parseInt(m[3]);
+                if (!assigned.has(varName) && !keywords.has(varName)) {
+                    used[varName] = { op, val };
+                }
+            }
+
+            // Strip string contents before scanning for bare variable names
+            const codeNoStrings = codeNoComments.replace(/["'][^"']*["']/g, '""');
+
+            // Find any other bare variable names not yet accounted for
+            for (const m of codeNoStrings.matchAll(/\b([a-zA-Z_][a-zA-Z0-9_]*)\b/g)) {
+                const name = m[1];
+                if (!keywords.has(name) && !assigned.has(name) && !used[name] && !/^\d/.test(name)) {
+                    used[name] = { op: '==', val: 0 };
+                }
+            }
+
+            const injections = [];
+            for (const [varName, { op, val }] of Object.entries(used)) {
+                let defaultVal;
+                if      (op === '>')  defaultVal = val + 1;
+                else if (op === '>=') defaultVal = val;
+                else if (op === '<')  defaultVal = val - 1;
+                else if (op === '<=') defaultVal = val;
+                else if (op === '==') defaultVal = val;
+                else if (op === '!=') defaultVal = val + 1;
+                else                  defaultVal = 0;
+                injections.push(`${varName} = ${defaultVal}`);
+            }
+
+            if (injections.length === 0) return code;
+            return injections.join('\n') + '\n' + code;
+        }
+
         function runRealPython(code, inputValues) {
+            // Decode HTML entities
+            code = code
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>');
+
+            // Strip comment-only lines before running
+            code = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n').trim();
+
+            // Skip non-runnable snippets silently
+            if (!isRunnableCode(code)) {
+                return Promise.resolve({ output: [], vars: {} });
+            }
+
+            // Inject default variable values for any undefined vars
+            code = injectDefaultVars(code);
+
             return new Promise((resolve, reject) => {
                 const output = [];
                 let inputIndex = 0;
