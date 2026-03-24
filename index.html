@@ -3379,7 +3379,7 @@
                 return;
             }
 
-            runRealPython(codeToRun, []).then(({ output }) => {
+            runRealPython(codeToRun, [], block).then(({ output }) => {
                 output.forEach(line => logToConsole(line));
                 processResult(true);
             }).catch(e => {
@@ -3405,8 +3405,7 @@
                 return;
             }
 
-            // runRealPython handles non-runnable code silently via isRunnableCode
-            runRealPython(ans, []).then(({ output }) => {
+            runRealPython(ans, [], block).then(({ output }) => {
                 output.forEach(line => logToConsole(line));
                 processResult(true);
             }).catch(e => {
@@ -3476,10 +3475,10 @@
 
             const inputs = state.collectedInputs;
             state.collectedInputs = [];
-            block._runnableCode = null; // clean up
+            block._runnableCode = null;
 
             try {
-                const { output } = await runRealPython(codeToRun, inputs);
+                const { output } = await runRealPython(codeToRun, inputs, block);
                 output.forEach(line => logToConsole(line));
                 processResult(true);
             } catch (e) {
@@ -3534,7 +3533,7 @@
                     block._runnableCode = codeToRun;
                     triggerConsoleInput(block, match[1]);
                 } else {
-                    runRealPython(codeToRun, []).then(({ output }) => {
+                    runRealPython(codeToRun, [], block).then(({ output }) => {
                         output.forEach(line => logToConsole(line));
                         processResult(true);
                     }).catch(e => {
@@ -3554,7 +3553,7 @@
 
             if (isMatch) {
                 const codeToRun = block.data.useRegex ? rawInput : block.data.correctCode;
-                runRealPython(codeToRun, []).then(({ output }) => {
+                runRealPython(codeToRun, [], block).then(({ output }) => {
                     output.forEach(line => logToConsole(line));
                     processResult(true);
                 }).catch(e => {
@@ -3596,7 +3595,7 @@
 
             if (allCorrect) {
                 const codeToRun = lines.filter((_, i) => i % 2 !== 0).join('\n');
-                runRealPython(codeToRun, []).then(({ output }) => {
+                runRealPython(codeToRun, [], block).then(({ output }) => {
                     output.forEach(line => logToConsole(line));
                     processResult(true);
                 }).catch(e => {
@@ -3641,7 +3640,7 @@
                     block._runnableCode = codeToRun;
                     triggerConsoleInput(block, match[1]);
                 } else {
-                    runRealPython(codeToRun, []).then(({ output }) => {
+                    runRealPython(codeToRun, [], block).then(({ output }) => {
                         output.forEach(line => logToConsole(line));
                         processResult(true);
                     }).catch(e => {
@@ -3947,6 +3946,14 @@
             });
         });
 
+        function shouldExecute(block) {
+            // Check question-level flag
+            if (block.data.execute === false) return false;
+            // Check level-level flag
+            if (state.customLevelData.execute === false) return false;
+            return isRunnableCode(block.data.correctCode);
+        }
+
         function isRunnableCode(code) {
             const trimmed = code.trim();
 
@@ -4000,8 +4007,10 @@
                 }
             }
 
-            // Strip string contents before scanning for bare variable names
-            const codeNoStrings = codeNoComments.replace(/["'][^"']*["']/g, '""');
+            // With this:
+            const codeNoStrings = codeNoComments
+                .replace(/"[^"]*"/g, '""')   // remove double-quoted strings
+                .replace(/'[^']*'/g, "''");  // remove single-quoted strings
 
             // Find any other bare variable names not yet accounted for
             for (const m of codeNoStrings.matchAll(/\b([a-zA-Z_][a-zA-Z0-9_]*)\b/g)) {
@@ -4028,16 +4037,22 @@
             return injections.join('\n') + '\n' + code;
         }
 
-        function runRealPython(code, inputValues) {
+        function runRealPython(code, inputValues, block = null) {
+            // Level-wide flag
+            if (state.customLevelData?.execute === false) return Promise.resolve({ output: [], vars: {} });
+            // Per-question flag
+            if (block?.data?.execute === false) return Promise.resolve({ output: [], vars: {} });
+
             // Decode HTML entities
             code = code
                 .replace(/&quot;/g, '"')
                 .replace(/&#39;/g, "'")
+                .replace(/&apos;/g, "'")  // add this
                 .replace(/&amp;/g, '&')
                 .replace(/&lt;/g, '<')
                 .replace(/&gt;/g, '>');
 
-            // Strip comment-only lines before running
+            // Strip comment lines
             code = code.split('\n').filter(l => !l.trim().startsWith('#')).join('\n').trim();
 
             // Skip non-runnable snippets silently
@@ -4045,7 +4060,7 @@
                 return Promise.resolve({ output: [], vars: {} });
             }
 
-            // Inject default variable values for any undefined vars
+            // Inject default variable values
             code = injectDefaultVars(code);
 
             return new Promise((resolve, reject) => {
