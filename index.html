@@ -2188,7 +2188,8 @@
             <button class="btn btn-report" onclick="openReportModal()">DOWNLOAD REPORT</button>
             <button class="btn btn-report" onclick="openPythonInterpreter()">WRITE PYTHON</button>
             <button class="btn btn-help" onclick="showHelp()">?</button>
-        </div>
+            <!-- Add this button inside the bottom-controls div in your HTML -->
+<button onclick="startQuizMode()" class="btn btn-report" style="background:#c586c0;color:white">🎮 QUIZ MODE</button>        </div>
     </div>
 
     <div id="exam-screen" class="screen">
@@ -2329,6 +2330,17 @@
     </div>
 
     <script>
+        // ==================== FIREBASE QUIZ MODE ====================
+        const firebaseConfig = {
+        apiKey: "AIzaSyCIZpaHCz9vRemyqjEAhGt0v1A5C4eqZVc",
+        authDomain: "test-d4c00.firebaseapp.com",
+        databaseURL: "https://test-d4c00-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "test-d4c00"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const QUIZ_ROOT = 'pythondefense_quiz';   // separate from binaryblitz_quiz
+
         // Stats (Persistent & Dated)
         const STATS_KEY = 'pythonDefenseHistory';
         let globalHistory = {};
@@ -4752,7 +4764,684 @@
                 devKeyBuffer = [];
             }
         });
+
+        
     </script>
+<!-- PASTE THIS ENTIRE BLOCK AT THE BOTTOM OF YOUR <script> TAG -->
+
+<!-- ====================== FINAL FIXED PYTHON QUIZ MODE ====================== -->
+<!-- ====================== FINAL FIXED QUIZ MODE (No more ReferenceError) ====================== -->
+<script>
+// Quiz constants
+const PYTHON_QUIZ_ROOT = 'pythondefense_quiz';
+const QUIZ_QUESTION_TIME = 60;
+const QUIZ_POINTS_CORRECT = 100;
+const QUIZ_POINTS_WRONG = -50;
+
+// Global variables
+let quizPlayerName = localStorage.getItem('pythonDefense_playerName') || 'Player';
+let lobbyCode = '', playerId = '', isHost = false, lobbyData = null;
+let questions = [], currentQIdx = 0, playerScore = 0;
+let answered = false, timeLeft = QUIZ_QUESTION_TIME;
+let listenerRefs = {};
+let timerRef = null;
+
+const generateLobbyCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+};
+
+// All functions defined BEFORE any UI is rendered
+function showQuizNamePrompt(callback) {
+    const name = prompt("Enter your name for Quiz Mode:", quizPlayerName);
+    if (!name || name.trim().length < 2) return alert("Name must be at least 2 characters!");
+    quizPlayerName = name.trim();
+    localStorage.setItem('pythonDefense_playerName', quizPlayerName);
+    callback();
+}
+
+function startQuizMode() {
+    if (!quizPlayerName || quizPlayerName === 'Player') {
+        showQuizNamePrompt(() => renderQuizChoice());
+    } else {
+        renderQuizChoice();
+    }
+}
+
+function renderQuizChoice() {
+    const html = `
+        <div style="max-width:520px;margin:40px auto;text-align:center;color:#d4d4d4">
+            <h1 style="color:#569cd6;font-size:2.8rem;margin-bottom:10px">🎮 PYTHON QUIZ MODE</h1>
+            <p style="color:#aaa">Live multiplayer • Text & Code questions</p>
+            <p style="margin:25px 0;font-size:1.3rem">Playing as: <strong style="color:#c586c0">${quizPlayerName}</strong> 
+               <button onclick="changeQuizName()" style="background:#444;border:none;color:#fff;padding:4px 12px;border-radius:6px;font-size:0.9rem">✏️</button>
+            </p>
+            <button onclick="createQuizLobby()" class="btn btn-level" style="background:#c586c0;width:100%;height:75px;font-size:1.4rem;margin-bottom:15px">👑 HOST A GAME</button>
+            <button onclick="showJoinCodeScreen()" class="btn btn-level" style="background:#569cd6;width:100%;height:75px;font-size:1.4rem">🎯 JOIN A GAME</button>
+            <button onclick="exitQuizMode()" class="btn btn-close" style="width:100%;height:55px;margin-top:20px">← Back to Menu</button>
+        </div>`;
+    document.getElementById('quiz-content').innerHTML = html;
+    document.getElementById('menu-screen').classList.remove('active');
+    document.getElementById('quiz-screen').style.display = 'flex';
+}
+
+function changeQuizName() { showQuizNamePrompt(() => renderQuizChoice()); }
+
+function exitQuizMode() {
+    cleanupQuizListeners();
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('menu-screen').classList.add('active');
+}
+
+// ====================== JOIN CODE SCREEN ======================
+function showJoinCodeScreen() {
+    const html = `
+        <div style="max-width:520px;margin:40px auto;text-align:center">
+            <h2 style="color:#569cd6">Join Game</h2>
+            <input id="join-code-input" type="text" maxlength="4" placeholder="AB3X" 
+                   style="font-size:2.5rem;text-align:center;letter-spacing:8px;width:220px;padding:15px;background:#252526;border:2px solid #569cd6;border-radius:12px;color:#fff">
+            <div id="join-error" style="color:#f44336;margin:15px 0;height:24px"></div>
+            <button onclick="handleJoinLobby()" class="btn btn-level" style="background:#569cd6;width:100%;height:70px;font-size:1.4rem">JOIN →</button>
+            <button onclick="renderQuizChoice()" class="btn btn-close" style="width:100%;margin-top:15px">Cancel</button>
+        </div>`;
+    document.getElementById('quiz-content').innerHTML = html;
+    setTimeout(() => document.getElementById('join-code-input').focus(), 100);
+}
+async function handleJoinLobby() {
+    const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+    const errorEl = document.getElementById('join-error');
+    errorEl.textContent = '';
+
+    if (code.length !== 4) return errorEl.textContent = 'Enter 4 characters';
+
+    const snap = await db.ref(`${PYTHON_QUIZ_ROOT}/lobbies/${code}`).get();
+    if (!snap.exists()) return errorEl.textContent = 'Lobby not found';
+    const data = snap.val();
+    if (data.status !== 'waiting') return errorEl.textContent = 'Game already started';
+
+    playerId = `player_${Date.now()}`;
+    isHost = false;
+    lobbyCode = code;
+
+    await db.ref(`${PYTHON_QUIZ_ROOT}/lobbies/${code}/players/${playerId}`).set({
+        name: quizPlayerName,
+        score: 0,
+        isHost: false,
+        joinedAt: Date.now()
+    });
+
+    db.ref(`${PYTHON_QUIZ_ROOT}/lobbies/${code}/players/${playerId}`).onDisconnect().remove();
+
+    const lobbyRef = db.ref(`${PYTHON_QUIZ_ROOT}/lobbies/${code}`);
+    const handler = lobbyRef.on('value', snap => {
+        if (!snap.exists()) return exitQuizMode();
+        lobbyData = snap.val();
+
+        // KICK DETECTION: If the players list exists but this player's ID is missing,
+        // it means the host deleted them from the database.
+        if (lobbyData.players && !lobbyData.players[playerId]) {
+            alert("You have been kicked from the lobby.");
+            exitQuizMode();
+            return;
+        }
+
+        renderCurrentQuizView();
+    });
+    listenerRefs.lobby = () => lobbyRef.off('value', handler);
+}
+// ====================== HOST ======================
+async function createQuizLobby() {
+    lobbyCode = generateLobbyCode();
+    playerId = `host_${Date.now()}`;
+    isHost = true;
+
+    const lobbyRef = db.ref(`${PYTHON_QUIZ_ROOT}/lobbies/${lobbyCode}`);
+    await lobbyRef.set({
+        code: lobbyCode,
+        hostName: quizPlayerName,
+        status: 'waiting',
+        players: { [playerId]: { name: quizPlayerName, score: 0, isHost: true, joinedAt: Date.now() } },
+        currentQuestion: -1,
+        questions: []
+    });
+
+    lobbyRef.onDisconnect().remove();
+
+    const handler = lobbyRef.on('value', snap => {
+        if (!snap.exists()) { exitQuizMode(); return; }
+        lobbyData = snap.val();
+        
+        // INTERCEPT HERE: If we are still waiting, just update the player list.
+        // This prevents the app from trying to render game views too early.
+        if (lobbyData.status === 'waiting') {
+            if (document.getElementById('lobby-player-list')) {
+                refreshLobbyPlayers(); // Target just the players if the lobby is already open
+            }
+            return; // Stop here so we don't trigger game-state renders
+        }
+
+        // If the status is NOT 'waiting' (e.g., 'question', 'playing'), proceed to normal game views
+        renderCurrentQuizView();
+    });
+    
+    listenerRefs.lobby = () => lobbyRef.off('value', handler);
+
+    // Initial render when the lobby is first created
+    renderHostLobbyWithCategory();
+}
+
+function renderHostLobbyWithCategory() {
+    // EARLY EXIT: If the UI is already built, just update the players and stop!
+    // This prevents the host's dropdown selection from resetting every time someone joins.
+    if (document.getElementById('category-select')) {
+        refreshLobbyPlayers();
+        return;
+    }
+
+    const html = `
+        <div style="max-width:600px;margin:20px auto;background:#252526;border-radius:12px;padding:20px;color:#d4d4d4">
+            <h2 style="color:#c586c0;text-align:center">HOST LOBBY</h2>
+            <div style="background:#1e1e1e;padding:15px;border-radius:8px;margin:15px 0;text-align:center">
+                <div style="font-size:0.9rem;color:#888">GAME CODE</div>
+                <div style="font-size:3rem;font-weight:bold;letter-spacing:8px;color:#c586c0">${lobbyCode}</div>
+            </div>
+            
+            <div style="margin:15px 0">
+                <label style="color:#aaa">Select Questions:</label>
+                <select id="category-select" style="width:100%;padding:10px;background:#1e1e1e;color:#fff;border-radius:6px;border:1px solid #333;">
+                    <option value="all">All Levels</option>
+                    <option value="stage1">Stage 1</option>
+                    <option value="stage2">Stage 2</option>
+                    <option value="stage3">Stage 3</option>
+                    <option value="stage4">Stage 4</option>
+                    <option value="stage5">Stage 5</option>
+                    <option value="stage6">Stage 6 (Loops)</option>
+                    <option value="lists">Lists (GCSE)</option>
+                </select>
+            </div>
+
+            <div style="margin:20px 0;background:#1e1e1e;padding:15px;border-radius:8px;">
+                <h3 style="margin-top:0;font-size:1rem;color:#aaa">Players in Lobby (<span id="lobby-player-count">0</span>)</h3>
+                <div id="lobby-player-list" style="max-height:180px;overflow-y:auto;">
+                    <div style="color:#888;font-style:italic">Waiting for players...</div>
+                </div>
+            </div>
+
+            <button onclick="startQuizGame()" class="btn btn-level" style="background:#6a9955;width:100%;height:70px;font-size:1.4rem;border:none;border-radius:6px;color:#fff;cursor:pointer">▶ START QUIZ</button>
+            <button onclick="deleteLobby()" class="btn btn-close" style="width:100%;margin-top:10px;padding:10px;background:#f44336;border:none;border-radius:6px;color:#fff;cursor:pointer">Close Lobby</button>
+        </div>`;
+        
+    document.getElementById('quiz-content').innerHTML = html;
+    
+    // Call it once immediately to populate the host's own name
+    refreshLobbyPlayers(); 
+}
+
+async function deleteLobby() {
+    if (confirm("Close this lobby?")) {
+        await db.ref(`${PYTHON_QUIZ_ROOT}/lobbies/${lobbyCode}`).remove();
+        exitQuizMode();
+    }
+}
+
+// ====================== START GAME ======================
+async function startQuizGame() {
+    questions = [];
+    const cat = document.getElementById('category-select') ? document.getElementById('category-select').value : 'all';
+
+    const ranges = {
+        all: [1,52], stage1: [1,6], stage2: [7,12], stage3: [13,18],
+        stage4: [19,24], stage5: [25,28], stage6: [29,42], lists: [43,52]
+    };
+
+    const [min, max] = ranges[cat] || [1,52];
+
+    for (let lvl = min; lvl <= max; lvl++) {
+        if (!LEVEL_URLS[lvl]) continue;
+        try {
+            const res = await fetch(LEVEL_URLS[lvl]);
+            if (!res.ok) continue;
+            const data = await res.json();
+            if (data.questions) {
+                const levelInputType = data.type || 'text';
+                data.questions.forEach(q => {
+                    if (q.correctCode || q.correct || q.answer || q.html) {
+                        q.levelType = lvl;
+                        q.inputType = q.inputType || levelInputType;
+                        questions.push(q);
+                    }
+                });
+            }
+        } catch(e) {}
+    }
+
+    questions = questions.sort(() => Math.random() - 0.5).slice(0, 15);
+
+    if (questions.length === 0) {
+        questions = [{ html: "<p style='color:#f44336;text-align:center'>No questions found.<br>Try another category.</p>", correctCode: "pass" }];
+    }
+
+    await db.ref(`${PYTHON_QUIZ_ROOT}/lobbies/${lobbyCode}`).update({
+        status: 'question',
+        currentQuestion: 0,
+        questions: questions,
+        questionStartedAt: Date.now()
+    });
+}
+
+// ====================== JOIN LOBBY WAITING ROOM ======================
+function renderJoinLobby() {
+    const players = Object.values(lobbyData.players || {});
+    const playerList = players.map(p =>
+        `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #333">
+            <span style="color:#c586c0;font-size:1.3rem">${p.isHost ? '&#x1F451;' : '&#x1F3AE;'}</span>
+            <span style="font-size:1.1rem">${p.name}</span>
+            ${p.isHost ? '<span style="font-size:0.8rem;color:#888;margin-left:auto">HOST</span>' : ''}
+        </div>`
+    ).join('');
+
+    const html = `
+        <div style="max-width:520px;margin:30px auto;text-align:center;color:#d4d4d4">
+            <h2 style="color:#569cd6">Waiting for host to start...</h2>
+            <div style="background:#252526;border-radius:12px;padding:15px;margin:20px 0">
+                <div style="font-size:0.9rem;color:#888;margin-bottom:5px">LOBBY CODE</div>
+                <div style="font-size:3rem;font-weight:bold;letter-spacing:8px;color:#c586c0">${lobbyCode}</div>
+            </div>
+            <div style="background:#252526;border-radius:12px;padding:15px;text-align:left">
+                <div style="font-size:0.9rem;color:#888;margin-bottom:10px">PLAYERS (${players.length})</div>
+                ${playerList || '<div style="color:#555">No players yet</div>'}
+            </div>
+            <div style="margin-top:20px;color:#888;font-size:0.9rem">&#x23F3; Waiting for host to start the game...</div>
+            <button onclick="exitQuizMode()" class="btn btn-close" style="width:100%;margin-top:20px">&#x2190; Leave Lobby</button>
+        </div>`;
+    document.getElementById('quiz-content').innerHTML = html;
+}
+
+// ====================== RENDERING ======================
+
+// Track last-known state to avoid unnecessary full re-renders
+let _lastStatus = null;
+let _lastQuestionIdx = -1;
+
+function renderCurrentQuizView() {
+    if (!lobbyData) return;
+
+    // Players sync their local questions array from Firebase
+    if (!isHost && lobbyData.questions && lobbyData.questions.length > 0) {
+        questions = lobbyData.questions;
+    }
+
+    const newStatus = lobbyData.status;
+    const newIdx = newStatus === 'question' ? (lobbyData.currentQuestion || 0) : -1;
+
+    if (newStatus === 'waiting') {
+        if (_lastStatus !== 'waiting') {
+            _lastStatus = 'waiting';
+            if (isHost) renderHostLobbyWithCategory();
+            else renderJoinLobby();
+        } else {
+            // Just refresh the player list in-place without rebuilding the whole screen
+            if (!isHost) renderJoinLobby();
+        }
+
+    } else if (newStatus === 'question') {
+        const questionChanged = newIdx !== _lastQuestionIdx;
+        const statusChanged = _lastStatus !== 'question';
+
+        if (questionChanged) {
+            // New question — reset per-question state and do a full render
+            answered = false;
+            timeLeft = QUIZ_QUESTION_TIME;
+            window._quizCurrentOptions = [];
+            currentQIdx = newIdx;
+            _lastStatus = 'question';
+            _lastQuestionIdx = newIdx;
+            if (isHost) renderHostGameView();
+            else renderPlayerGameView();
+        } else if (statusChanged) {
+            // First time entering question status
+            currentQIdx = newIdx;
+            _lastStatus = 'question';
+            _lastQuestionIdx = newIdx;
+            if (isHost) renderHostGameView();
+            else renderPlayerGameView();
+        } else {
+            // Same question, same status — only a score/player update fired.
+            // For host: refresh the scoreboard panel without touching the question.
+            // For players: only refresh the scoreboard if they have already answered
+            //              (answered=true means their textarea is gone anyway).
+            //              If they haven't answered yet, leave the DOM completely alone.
+            if (isHost) {
+                refreshScoreboard();
+            } else if (answered) {
+                refreshScoreboard();
+            }
+            // If player hasn't answered yet: do nothing — preserve their in-progress input
+        }
+
+    } else if (newStatus === 'finished') {
+        if (_lastStatus !== 'finished') {
+            _lastStatus = 'finished';
+            clearInterval(timerRef);
+            renderResults();
+        }
+    }
+}
+
+function kickPlayer(targetId) {
+    if (confirm("Are you sure you want to kick this player?")) {
+        db.ref(`${PYTHON_QUIZ_ROOT}/lobbies/${lobbyCode}/players/${targetId}`).remove();
+    }
+}
+
+// Updates only the player list area without touching the rest of the lobby DOM
+function refreshLobbyPlayers() {
+    const listEl = document.getElementById('lobby-player-list');
+    const countEl = document.getElementById('lobby-player-count');
+    if (!listEl) return;
+
+    // Use Object.entries to get both the unique ID (uid) and the player object (p)
+    const playersArray = Object.entries(lobbyData.players || {});
+    
+    if (countEl) countEl.innerText = playersArray.length;
+
+    if (playersArray.length === 0) {
+        listEl.innerHTML = '<div style="color:#888;font-style:italic">Waiting for players...</div>';
+        return;
+    }
+
+    listEl.innerHTML = playersArray.map(([uid, p]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#252526;padding:10px;margin-bottom:6px;border-radius:4px;border-left:4px solid #c586c0;font-family:monospace;color:#fff;">
+            <div>
+                ${p.name} ${p.isHost ? '<span style="color:#888;font-size:0.8rem;margin-left:8px">(Host)</span>' : ''}
+            </div>
+            ${!p.isHost ? `
+                <button onclick="kickPlayer('${uid}')" style="background:transparent;border:none;color:#f44336;font-weight:bold;cursor:pointer;font-size:1.1rem;padding:0 5px;" title="Kick Player">✕</button>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+// Update just the live-scores div without rebuilding the whole page
+function refreshScoreboard() {
+    const scoreEl = document.getElementById('quiz-scoreboard');
+    if (!scoreEl) return;
+    const players = Object.values(lobbyData.players || {})
+        .sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 8);
+    scoreEl.innerHTML = players.map(p => `
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333">
+            <span>${p.name}</span><span style="color:#c586c0;font-weight:bold">${p.score || 0}</span>
+        </div>`).join('');
+}
+function renderHostGameView() {
+    const q = questions[currentQIdx];
+    const text = q.html || q.correctCode || q.correct || q.answer || "Question text missing";
+
+    const html = `
+        <div style="max-width:700px;margin:20px auto">
+            <div style="background:#252526;border-radius:12px;padding:20px">
+                <div style="font-size:0.9rem;color:#888">HOST VIEW — Q${currentQIdx + 1} / ${questions.length}</div>
+                <div style="margin:15px 0;font-family:monospace;background:#1e1e1e;padding:15px;border-radius:8px;white-space:pre-wrap">${text}</div>
+                <button onclick="hostNextQuestion()" class="btn btn-level" style="background:#6a9955;width:100%;height:70px;font-size:1.3rem;margin-top:15px">NEXT QUESTION →</button>
+            </div>
+            <div style="margin-top:20px;background:#252526;border-radius:12px;padding:15px">
+                <h4 style="color:#aaa">Live Scores</h4>
+                <div id="quiz-scoreboard">
+                ${Object.values(lobbyData.players || {}).sort((a,b) => (b.score||0)-(a.score||0)).slice(0,8).map(p => `
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333">
+                        <span>${p.name}</span><span style="color:#c586c0;font-weight:bold">${p.score||0}</span>
+                    </div>`).join('')}
+                </div>
+            </div>
+        </div>`;
+    document.getElementById('quiz-content').innerHTML = html;
+}
+
+function hostNextQuestion() {
+    const next = currentQIdx + 1;
+    if (next >= questions.length) {
+        db.ref(`${PYTHON_QUIZ_ROOT}/lobbies/${lobbyCode}`).update({ status: 'finished' });
+    } else {
+        db.ref(`${PYTHON_QUIZ_ROOT}/lobbies/${lobbyCode}`).update({
+            currentQuestion: next,
+            questionStartedAt: Date.now()
+        });
+    }
+}
+
+function renderPlayerGameView() {
+    if (!questions || questions.length === 0) {
+        document.getElementById('quiz-content').innerHTML = `
+            <div style="max-width:520px;margin:60px auto;text-align:center;color:#aaa">
+                <div style="font-size:3rem">&#x23F3;</div><p>Loading questions...</p>
+            </div>`;
+        return;
+    }
+    const q = questions[currentQIdx];
+    if (!q) return;
+
+    const inputType = q.inputType || (q.optionsRaw && q.optionsRaw.length ? 'mcq' : 'text');
+    const isMCQ = inputType === 'mcq';
+    const isMultiline = inputType === 'multiline' || inputType === 'multistep' || inputType === 'var_print';
+
+    console.log('[Quiz] Q' + (currentQIdx + 1) + ' inputType=' + inputType + ' isMCQ=' + isMCQ + ' isMultiline=' + isMultiline, q);
+    if (isMultiline) {
+        const correct = q.correctCode || q.correct || q.answer || '';
+        console.log('[Quiz] Multiline correctCode lines:', correct.split('\n').map((l, i) => i + ': ' + JSON.stringify(l)));
+    }
+
+    const text = q.html || q.correctCode || q.correct || q.answer || "Question text missing";
+
+    let answerHTML = '';
+    if (isMCQ) {
+        const opts = q.optionsRaw ? [...q.optionsRaw] : [];
+        for (let i = opts.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [opts[i], opts[j]] = [opts[j], opts[i]];
+        }
+        window._quizCurrentOptions = opts;
+        const colors = ['#569cd6','#c586c0','#6a9955','#ce9178'];
+        answerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px" id="mcq-grid">
+            ${opts.map((opt, i) => `
+                <button onclick="submitPlayerAnswer(false, ${i})"
+                        style="background:${colors[i % colors.length]};border:none;border-radius:10px;
+                               padding:14px 10px;color:#fff;font-family:monospace;font-size:0.95rem;
+                               white-space:pre-wrap;text-align:left;cursor:pointer;min-height:60px">
+                    ${opt}
+                </button>`).join('')}
+        </div>`;
+    } else if (isMultiline) {
+        answerHTML = `
+            <textarea id="quiz-answer-textarea" rows="8" placeholder="Type your multi-line answer here..."
+                      style="width:100%;padding:15px;font-family:monospace;font-size:1.1rem;background:#1e1e1e;
+                             border:2px solid #569cd6;border-radius:12px;color:#fff;resize:vertical;margin-top:15px"></textarea>
+            <div style="font-size:0.8rem;color:#888;margin-top:6px">Multi-line — press Enter for new lines</div>
+            <button onclick="submitPlayerAnswer()" class="btn btn-level"
+                    style="background:#6a9955;width:100%;margin-top:12px;height:70px;font-size:1.3rem">SUBMIT ANSWER</button>`;
+    } else {
+        answerHTML = `
+            <textarea id="quiz-answer-textarea" rows="3" placeholder="Type your answer here..."
+                      style="width:100%;padding:15px;font-family:monospace;font-size:1.1rem;background:#1e1e1e;
+                             border:2px solid #569cd6;border-radius:12px;color:#fff;resize:vertical;margin-top:15px"></textarea>
+            <button onclick="submitPlayerAnswer()" class="btn btn-level"
+                    style="background:#6a9955;width:100%;margin-top:12px;height:70px;font-size:1.3rem">SUBMIT ANSWER</button>`;
+    }
+
+    const typeBadge = isMCQ ? '🔘 Multiple Choice' : isMultiline ? '📝 Multi-line Code' : '&#x2328;&#xFE0F; Type Answer';
+    const scoreList = Object.values(lobbyData.players || {})
+        .sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 8)
+        .map(p => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333">
+            <span>${p.name}</span><span style="color:#c586c0;font-weight:bold">${p.score || 0}</span>
+        </div>`).join('');
+
+    const html = `
+        <div style="max-width:620px;margin:20px auto">
+            <div style="background:#252526;border-radius:12px;padding:20px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                    <span style="font-size:0.85rem;color:#888">Q${currentQIdx + 1} &bull; Level ${q.levelType || '?'}</span>
+                    <span style="font-size:0.8rem;color:#aaa;background:#1e1e1e;padding:3px 8px;border-radius:6px">${typeBadge}</span>
+                </div>
+                <div id="timer" style="font-size:2rem;font-weight:bold;color:#f44336;margin-bottom:10px">60</div>
+                <div style="font-family:monospace;background:#1e1e1e;padding:15px;border-radius:8px;white-space:pre-wrap">${text}</div>
+                ${answerHTML}
+            </div>
+            <div style="margin-top:20px;background:#252526;border-radius:12px;padding:15px">
+                <h4 style="color:#aaa;margin-bottom:10px">Live Scores</h4>
+                <div id="quiz-scoreboard">${scoreList}</div>
+            </div>
+        </div>`;
+    document.getElementById('quiz-content').innerHTML = html;
+    startPlayerTimer();
+}
+
+function startPlayerTimer() {
+    clearInterval(timerRef);
+    timeLeft = QUIZ_QUESTION_TIME;
+    const timerEl = document.getElementById('timer');
+    timerRef = setInterval(() => {
+        timeLeft--;
+        if (timerEl) timerEl.textContent = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(timerRef);
+            submitPlayerAnswer(true);
+        }
+    }, 1000);
+}
+
+function submitPlayerAnswer(timeout = false, mcqIndex = null) {
+    if (answered) return;
+    answered = true;
+    clearInterval(timerRef);
+
+    const q = questions[currentQIdx];
+    const inputType = q.inputType || (q.optionsRaw && q.optionsRaw.length ? 'mcq' : 'text');
+    const isMCQ = inputType === 'mcq';
+    const isMultiline = inputType === 'multiline' || inputType === 'multistep' || inputType === 'var_print';
+
+    let input = '', isCorrect = false;
+
+    // Local helper mirroring the main game's buildRegex logic
+    const buildRegexLocal = (pattern, flags = '') => {
+        const anchored = pattern.startsWith('^') || pattern.endsWith('$');
+        return new RegExp(anchored ? pattern : '^' + pattern + '$', flags);
+    };
+
+    if (timeout) {
+        isCorrect = false;
+    } else if (isMCQ && mcqIndex !== null) {
+        const opts = window._quizCurrentOptions || [];
+        input = opts[mcqIndex] || '';
+        const correct = q.correctCode || q.correct || q.answer || "";
+        isCorrect = input === correct;
+        console.log('[Quiz] MCQ answer:', JSON.stringify(input), 'correct:', JSON.stringify(correct), 'match:', isCorrect);
+    } else {
+        const textarea = document.getElementById('quiz-answer-textarea');
+        input = textarea ? textarea.value : '';
+        const correct = q.correctCode || q.correct || q.answer || "";
+
+        if (isMultiline) {
+            // TrimEnd matches main game's multiline joined behavior
+            const norm = s => s.replace(/\r\n/g, '\n').trimEnd();
+            const userNorm = norm(input);
+            const correctNorm = norm(correct);
+
+            if (q.useRegex) {
+                try {
+                    // Includes the 's' flag for multiline dotAll matching
+                    isCorrect = buildRegexLocal(correctNorm, 's').test(userNorm);
+                } catch(e) {
+                    console.warn('[Quiz] Invalid regex in correctCode:', e.message);
+                    isCorrect = false;
+                }
+            } else {
+                // Aligns with main game's quote normalization
+                const userClean = userNorm.replace(/'/g, '"');
+                const correctClean = correctNorm.replace(/'/g, '"');
+                isCorrect = userClean === correctClean;
+            }
+            console.log('[Quiz] Multiline useRegex:', !!q.useRegex);
+            console.log('[Quiz] Multiline user:   ', JSON.stringify(userNorm));
+            console.log('[Quiz] Multiline correct:', JSON.stringify(correctNorm));
+            console.log('[Quiz] Match:', isCorrect);
+        } else {
+            if (q.useRegex) {
+                try {
+                    isCorrect = buildRegexLocal(correct).test(input.trim());
+                } catch(e) {
+                    console.warn('[Quiz] Invalid regex in correctCode:', e.message);
+                    isCorrect = false;
+                }
+            } else {
+                // Aligns with main game's exact match (no longer forcing toLowerCase)
+                isCorrect = input.trim() === String(correct).trim();
+            }
+        }
+    }
+
+    const delta = isCorrect ? QUIZ_POINTS_CORRECT : (timeout ? 0 : QUIZ_POINTS_WRONG);
+    playerScore = Math.max(0, playerScore + delta);
+    db.ref(`${PYTHON_QUIZ_ROOT}/lobbies/${lobbyCode}/players/${playerId}/score`).set(playerScore);
+
+    if (isMCQ) {
+        const grid = document.getElementById('mcq-grid');
+        if (grid) grid.querySelectorAll('button').forEach(b => b.disabled = true);
+    }
+
+    // When useRegex, the correctCode is a pattern — don't show it raw to the player
+    const correctAnswer = q.useRegex
+        ? '(see question for expected format)'
+        : (q.correctCode || q.correct || q.answer || '?');
+    const resultHTML = `
+        <div style="margin-top:15px;padding:25px;border-radius:12px;background:${isCorrect ? '#6a9955' : '#f44336'};color:white;text-align:center;font-size:1.5rem">
+            ${isCorrect ? '&#x2705; Correct!' : timeout ? '&#x23F0; Time&#39;s up!' : '&#x274C; Wrong!'}
+            ${!isCorrect && !timeout ? `<div style="font-family:monospace;font-size:0.85rem;margin-top:8px;opacity:0.9;background:rgba(0,0,0,0.2);padding:8px;border-radius:6px;white-space:pre-wrap;text-align:left">Answer: ${correctAnswer}</div>` : ''}
+            <div style="font-size:1.1rem;margin-top:10px">${isCorrect ? '+' + QUIZ_POINTS_CORRECT : timeout ? '0' : QUIZ_POINTS_WRONG} pts</div>
+        </div>`;
+
+    const container = document.querySelector('#quiz-content > div');
+    if (container) container.innerHTML += resultHTML;
+}
+
+function renderResults() {
+    const players = Object.entries(lobbyData.players || {})
+        .map(([id, p]) => ({id, name: p.name, score: p.score || 0}))
+        .sort((a,b) => b.score - a.score);
+
+    const html = `
+        <div style="max-width:600px;margin:30px auto;text-align:center">
+            <h1 style="color:#ffd700;font-size:3rem">🏆 FINAL RESULTS</h1>
+            ${players.map((p,i) => `
+                <div style="display:flex;justify-content:space-between;background:#252526;padding:18px;border-radius:12px;margin:8px 0">
+                    <span>${i+1}. ${p.name} ${p.id===playerId?'(YOU)':''}</span>
+                    <span style="color:#c586c0;font-weight:bold">${p.score}</span>
+                </div>`).join('')}
+            <button onclick="exitQuizMode()" class="btn btn-close" style="width:100%;margin-top:30px">Back to Main Menu</button>
+        </div>`;
+    document.getElementById('quiz-content').innerHTML = html;
+}
+
+function cleanupQuizListeners() {
+    Object.values(listenerRefs).forEach(fn => typeof fn === 'function' && fn());
+    listenerRefs = {};
+    clearInterval(timerRef);
+    // Reset render-diffing state so next game starts fresh
+    _lastStatus = null;
+    _lastQuestionIdx = -1;
+    answered = false;
+    playerScore = 0;
+    questions = [];
+    currentQIdx = 0;
+    window._quizCurrentOptions = [];
+}
+</script>
+
+
+    <!-- QUIZ MODE SCREENS -->
+    <div id="quiz-screen" class="screen" style="display:none; background:#1e1e1e; flex-direction:column;">
+        <div id="quiz-content" style="flex:1; width:100%; overflow:auto; padding:15px;"></div>
+    </div>
 </body>
 
 </html>
